@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+*.csv text eol=lf
+# Byte-exact, non-operative historical evidence. Review via its recorded hash
+# and by opening the file; exclude it from active textual diff/whitespace policy.
+coding/reference/Architecture_v1.5_ORIGINAL_REFERENCE_ONLY.md -text -diff

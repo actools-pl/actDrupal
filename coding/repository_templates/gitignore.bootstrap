@@ -1,0 +1,13 @@
+# Local development outputs and private operator material; review before use.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+/.env
+/local-secrets/
+/private-evidence/
+# Ignoring a path is not secret protection. Never commit credentials or private data.

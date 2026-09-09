@@ -6,4 +6,4 @@ Secure Drupal installation and operations toolkit being developed from the begin
 
 The current product scope is fresh installations only. Existing-site migration and legacy backup imports are excluded. Backup, restore, disaster recovery and supported updates for sites created by the new installer are planned requirements.
 
-Coding Package v1.3 and the active Architecture v1.5.1 are included under `coding/`. Start with the [coder documentation](coding/00_START_HERE_CODER_DOCUMENTATION.md). BOOT-001 imports and reviews this workflow; installer implementation remains pending. Product implementation begins with CP-001 only after the documentation import is reviewed, merged and its integration checks pass.
+The next reviewed step imports Coding Package v1.3 and Architecture v1.5.1 into `coding/`. That task adds the working documentation link after its target exists. Product implementation begins with a minimal Python package and source CI, followed by the ordered architecture tasks.

@@ -1,34 +1,75 @@
-# BOOT-001 — Review receipt and correction follow-up
+# BOOT-001 — final review, integration and closeout record
 
-**Prepared:** 2026-09-09T07:16:46Z. **Review:** BOOT-001-IR-153d937. **Subject:** operator-reported commit `153d937d56a08000e4cdf41312fbd5cf11567019`, reconstructed tree `8690def93e4ef3c7dc71706452622a0128d15807`, original task base `cc4e94135a5b2709dc907ad799b95b9a4c511f73`. **Disposition received:** CHANGES REQUESTED. This record summarizes supplied evidence; it is not an independent review of the correction and does not close findings.
+**Prepared:** 2026-09-09T17:42:09Z. **Task:** BOOT-001. **Original base:** `cc4e94135a5b2709dc907ad799b95b9a4c511f73`. **Initial candidate:** `153d937d56a08000e4cdf41312fbd5cf11567019`. **Accepted corrected candidate:** `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1` / tree `27ced31b2b6d0e2d5ea80d1fd4679981d611b38d`. **Tested merge:** `880f59d86ae936b2c4968378bc6a0b08ba61092f`.
 
-## Original evidence custody and provenance
+This file preserves the original changes-requested history and records the later corrected review, human acceptance, protected integration and bounded merged-result checks. It is a records-only chronology update, not a new review of product implementation and not activation of CP-001.
 
-Retain the unchanged original files in the controlled external packet. They are supplied again in D02 under `evidence/`, not copied into product/runtime paths.
+## Review chronology
 
-| Evidence | SHA-256 |
+### Initial independent review — BOOT-001-IR-153d937
+
+The initial review requested changes for F01 (startup prerequisite ordering) and F02 (roadmap count/numbering), and disclosed material G01 reading limits. Its immutable evidence remains part of the PR #1 review archive.
+
+- Original review SHA-256: `b21d45bf9a0e405aa0ef5586851f3d12ca0b45e7df1cba2659b0100ea074e923`.
+- Original coverage SHA-256: `8c737a9a6e015f12e942e47af4c685f55fcf042a18e678f2f7358151ac3f08f2`.
+
+### Corrected independent re-review — BOOT-001-IR-7c5289b
+
+The corrected candidate `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1` was re-reviewed against BOOT-001-P02 / RP02-v1.
+
+**Disposition:** ACCEPTABLE WITHIN THE STATED BOOT-001 TASK EVIDENCE.
+
+- F01: CLOSED.
+- F02: CLOSED.
+- Material G01 reading: RESOLVED with explicit direct/prior/mapped coverage.
+- CPD-12 reviewer route: consistent; no new material source defect or task-blocking regression found.
+- E01/E02 narrowed; E03 retained; E04 reviewer-route choice resolved with observation limits retained.
+- Final review SHA-256: `dc031405dea1c92fbf33f3f72846916d0be201a985bce1cb0855b0f5a419d7de`.
+- Final coverage SHA-256: `0e128a51d9f4491929cf5d84c9bf830f89cd2653e01b050fcd6df3a130ec9b92`.
+
+Review/acceptance evidence ZIP SHA-256: `7a62ed457367f8995d032437afac5e2beee7730cae5ce49a8a9d81dd8a6d95e9`; attached at https://github.com/actools-pl/actDrupal/pull/1#issuecomment-5604276344.
+
+## Human acceptance, publication and merge
+
+MP Singh separately accepted the exact corrected candidate and later authorized marking PR #1 ready and merging it with a normal protected merge commit. Those decisions did not authorize settings changes, source alteration, branch deletion or CP-001 activation.
+
+Actual integration result:
+
+- PR: https://github.com/actools-pl/actDrupal/pull/1
+- Merge SHA: `880f59d86ae936b2c4968378bc6a0b08ba61092f`.
+- Merge parents: `cc4e94135a5b2709dc907ad799b95b9a4c511f73` and `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1`.
+- Integrated tree: `27ced31b2b6d0e2d5ea80d1fd4679981d611b38d`, identical to the accepted candidate tree.
+- `task/BOOT-001` retained at `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1`.
+- No source conflict resolution, protection bypass, branch deletion or server/dependency operation was recorded.
+
+## Bounded merged-result checks
+
+Fresh bounded documentation integration checks ran against supplied bytes whose complete 81-file graph matched the GitHub-returned merged tree.
+
+| Check | Result |
 |---|---|
-| `BOOT-001_INDEPENDENT_REVIEW_153d937(1).md` (D02 copy: `evidence/BOOT-001_INDEPENDENT_REVIEW_153d937.md`) | `b21d45bf9a0e405aa0ef5586851f3d12ca0b45e7df1cba2659b0100ea074e923` |
-| `BOOT-001_REVIEW_COVERAGE_153d937(1).csv` (D02 copy: `evidence/BOOT-001_REVIEW_COVERAGE_153d937.csv`) | `8c737a9a6e015f12e942e47af4c685f55fcf042a18e678f2f7358151ac3f08f2` |
+| Complete source inventory | PASS: all 81 files/hashes/regular modes unchanged |
+| Base-to-integrated inventory | PASS: 79 changed paths; 78 `coding/` additions plus root README modification |
+| Authored whitespace | PASS: `git diff --check` exit 0 |
+| Integrated workflow lint | PASS: 78 package files, 67 Markdown, 338 local links, 5 CSV, 53 tasks |
+| Fresh distribution integrity / lint | PASS / PASS: 75 manifest entries; 76 package files, 303 links, 53 tasks |
+| Adopted-copy integrity diagnostic | Expected exit 1 with exactly 22 changed and two unlisted paths; no extra discrepancy |
+| README/frozen files/ledger/headings | PASS; architectures/helpers/original manifest intact, all 51 CP rows unchanged, sections 1–8, CP-001 planned |
+| Supplied pre-merge graph consistency | `git fsck --full --no-reflogs` exit 0; not a signature/authenticity claim |
 
-The operator supplied these files; their hashes bind received bytes, not an authenticated reviewer identity. The old review declares Codex Work Mode; the owner now reports Work / ChatGPT 6 Astra and approves [CPD-12](REVIEW_ROUTE_DECISION.md). Its past exact effort remains unobserved here. Original findings and evidence limits are not edited retrospectively.
+Integration chronology: https://github.com/actools-pl/actDrupal/pull/1#issuecomment-5604636531.
 
-## Findings and remaining coverage
+Integration evidence ZIP SHA-256: `702402f875d384e6d7afa70a98c3ffb460b7cb1ccd56df8cc330a282f73978eb`.
+Integration results JSON SHA-256: `1065292430eb0577b42e1626bf1ce12d4a59d0087839833bd58cec9570aeaea0`.
 
-| ID | Classification / current state | Correction response and closure requirement |
-|---|---|---|
-| F01 | medium, task-blocking, OPEN | P02 proposes RB01 step 2 separating pre-write checks, actual BOOT-000 result recording, independent new-project backup and safe resume. Re-review complete RB01 and its RB11/change-control/Start Here/handoff dependencies against empty-start and existing-candidate scenarios. Unsafe triggers must still block their affected write. |
-| F02 | low, nonblocking, OPEN | P02 aligns the roadmap with 53 parent IDs including BOOT-000/001 and cancelled CP-038/039, and changes the final heading to 8. Compare ledger and headings; do not change CP task IDs/dependencies/states. |
-| G01 | disclosed partial semantic coverage, unresolved | Initial review covered task-cited active architecture clauses but not the complete active/historical additions. P02 does not waive that original final-diff reading obligation or treat hashes as semantic review. Resolve material remaining reading before recommending acceptance; preserve precise boundaries and justification. |
+## Retained qualifications
 
-Original G01 remaining ranges: active v1.5.1 lines 137–447, 480–1047, 1125–1296, 1335–1584, 1760–1828, 1859–3012; historical v1.5 lines 21–3003. These range identities refer to the frozen files in the original report, not other documents. The historical text stays non-operative even when read. Read complete changed correction files and necessary unchanged dependencies as well as assessing the original final base-to-result additions; no whole-product implementation audit is claimed.
+The detailed branch-protection endpoint returns 403 to the managed connector because Administration read permission is unavailable. `main` is observable as protected, but individual saved-rule/admin/app settings retain owner-observation provenance; no independent destructive enforcement test is claimed. No workflow/check runs were returned for the merged SHA, and their absence is not a green CI result. Independent source-backup custody remains unverified.
 
-E01: original commit identity/association was operator-reported, while supplied file/tree bytes were independently reconstructed. E02: Windows apply/commit receipts are operator chat output; old Linux rehearsal harness coverage was limited. E03: controls/refs evidence is historical and must be refreshed as applicable before future remote writes; a settings edit PDF alone is not proof of persisted/current detailed enforcement. E04: CPD-12 resolves the interface-choice decision but does not prove the exact prior UI label/effort or ordinary-chat UX. None is automatically an observed product failure. Do not rerun old mutations to manufacture historical evidence.
+These are evidence limits, not observed product failures. No installer, CI, devbox, release-test or production qualification is claimed by BOOT-001.
 
-## Current correction scope and checks
+## Closeout disposition
 
-P02/D02 is incremental on `153d937d56a08000e4cdf41312fbd5cf11567019`, not a replacement import on the root. Complete changed files, incremental and final root-to-result diffs, inventories, original reviewer files, owner-decision text and new preparer checks are in the external correction delivery. No new correction commit or operator application is asserted in this preparation snapshot. Its eventual SHA and receipts must be recorded outside the clean checkout before a later reviewed record update.
+BOOT-001 source integration and its required bounded documentation checks are complete. The task ledger may record BOOT-001 as `merged` with candidate `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1` and tested merge `880f59d86ae936b2c4968378bc6a0b08ba61092f`. F01/F02 are closed and material G01 coverage is resolved.
 
-The original distribution SHA256SUMS, both architectures, both Python helpers, all root files and CP rows are preserved. The fresh-distribution integrity check must pass; the adopted-copy verifier must still fail with exactly the explicitly manifested edits/additions. Do not regenerate its manifest. Workflow lint, F01 tabletop scenarios and F02 count/order checks concern this bounded documentation correction only; the new check receipt names actual commands, environment, outputs and limits. Preparer checks are not independent acceptance, Windows execution or UX-T20.
-
-Findings stay open until a reviewer checks the actual corrected candidate and records closure. Owner approval of the route/correction scope is not task acceptance or merge authority. BOOT-000 is not repeated. CP-001 remains planned until reviewed BOOT integration and required checks.
+This records-only follow-up deliberately does not embed its own eventual merge SHA. After this closeout is reviewed and integrated, read current `main` and activate CP-001 from that actual integration head. CP-001 remains planned until then.

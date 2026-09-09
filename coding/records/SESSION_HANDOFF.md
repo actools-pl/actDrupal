@@ -1,23 +1,29 @@
 # Session handoff
 
-**Prepared:** 2026-09-09T07:16:46Z (preparer clock). **Packet / delivery:** BOOT-001-P02 / BOOT-001-D02-v1. **Relationship:** incremental correction on local candidate `153d937d56a08000e4cdf41312fbd5cf11567019`; this is not the old D01 import and has not been applied by the operator at preparation.
+**Prepared:** 2026-09-09T17:42:09Z. **Subject:** BOOT-001 records-only closeout following the verified source merge. This handoff records completed facts without embedding the future SHA of its own bookkeeping merge.
 
-## Completed and received
+## Completed milestone
 
-The operator reported local commit `153d937d56a08000e4cdf41312fbd5cf11567019`, tree `8690def93e4ef3c7dc71706452622a0128d15807`, parent `cc4e94135a5b2709dc907ad799b95b9a4c511f73`, clean `task/BOOT-001`, and no push or merge. The received independent report is CHANGES REQUESTED for F01; F02 is a nonblocking correction. Original report/coverage hashes, precise G01 limits and E01–E04 are retained in [review follow-up](BOOT-001_REVIEW_FOLLOWUP.md). Source/tree bytes were supplied; no raw candidate commit object or new live GitHub read was acquired for D02 preparation.
+- BOOT-000 root: `cc4e94135a5b2709dc907ad799b95b9a4c511f73`.
+- BOOT-001 accepted corrected candidate: `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1`, tree `27ced31b2b6d0e2d5ea80d1fd4679981d611b38d`.
+- Independent re-review BOOT-001-IR-7c5289b: acceptable within stated task evidence; F01/F02 closed and material G01 reading resolved.
+- Human acceptance, branch publication and PR #1 completed under separately recorded authority.
+- PR #1 merged normally into `main` as `880f59d86ae936b2c4968378bc6a0b08ba61092f`. GitHub readback showed parents `cc4e94135a5b2709dc907ad799b95b9a4c511f73` and `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1` and the unchanged accepted tree `27ced31b2b6d0e2d5ea80d1fd4679981d611b38d`.
+- Bounded documentation integration checks passed. Durable chronology and actual results are in https://github.com/actools-pl/actDrupal/pull/1#issuecomment-5604636531.
+- The review/acceptance evidence attachment is at https://github.com/actools-pl/actDrupal/pull/1#issuecomment-5604276344 and its downloaded copy matched the prepared ZIP byte-for-byte.
+- `task/BOOT-001` remains retained at the accepted head; it was not deleted.
+- No product source, CI workflow, dependency, server or CP-001 activation occurred.
 
-MP Singh explicitly approved Work / ChatGPT 6 Astra for reviewer sessions while usage lasts and ordinary 5.6 sol fallback, then asked to proceed. [CPD-12](REVIEW_ROUTE_DECISION.md) records this reviewer-only choice. Use fresh review context, precise identities and honest coverage in either route; no repeated permission is needed between the two choices. Coding/source and server authority are unchanged.
+## Current records-only closeout
 
-## Current allowed step
+The tracked preparation snapshots in project state, ledger, review/evidence indexes and this handoff were stale after the real merge. This closeout reconciles those records while preserving the tested merge SHA separately from the bookkeeping commit. It does not amend the accepted candidate or rerun any historical operation.
 
-Keep the D02 delivery outside `$HOME/actDrupal-work/actDrupal`. Inspect its manifest, complete files and incremental diff, verify delivery hashes, then run its exact local apply/stage helper once. It requires clean `task/BOOT-001` at `153d937d56a08000e4cdf41312fbd5cf11567019` with tree `8690def93e4ef3c7dc71706452622a0128d15807`, the recorded root on local main, unchanged complete parent files and expected remote starting refs. It stages only the explicit P02 file list. No root file, frozen architecture/reference, helper, original SHA256SUMS, CI, dependency, server, commit, push, PR, merge or settings change is part of this application step.
+The known GitHub administration limitation is retained: `main` is observable as protected, but the detailed protection endpoint returns 403 because the managed connector does not have Administration read access. Owner-side saved-control observations therefore remain necessary when detailed protection settings matter. No permission expansion or settings change is part of this closeout.
 
-## Stop and recovery
+Independent source-backup custody remains unverified.
 
-A mismatch or failed applicability check means preserve the checkout and return output, not reset, clean, force or reapply. Failure after patch application may leave staged files; preserve them and inspect the exact index/worktree/HEAD before deciding recovery. Do not delete coding/ or rerun either D01 or the original commit command. Delivery hashes detect byte mismatch, not authenticated authorship.
+## Next action
 
-## After operator receipt
+Review this records-only closeout candidate as a bounded documentation change and merge it through the normal protected PR route if accepted. The closeout's own eventual merge SHA need not be embedded in these files; the next session reads current `main`.
 
-Record actual stage result outside the checkout. Create and verify a new incremental candidate only through its separate selected commit step; do not amend `153d937d56a08000e4cdf41312fbd5cf11567019`. The new review packet must include original and incremental/final diffs, current complete files, exact new candidate/tree, original reviewer files, CPD-12 and real receipts. Re-review F01/F02 and material G01 coverage; findings remain open until then. Owner task acceptance, protected PR integration and required merged-result checks remain pending. CP-001 is not activated.
-
-No assistant remote mutation, background operation, server work or product qualification occurred in preparing D02. Historical controls, independent backup custody and Windows/new-reviewer execution are not freshly qualified here.
+After the closeout is integrated, CP-001 is the next dependency-ready implementation task. Activate it from the **actual current `main` SHA** after refreshing repository identity, controls and task records. CP-001 remains planned until that activation. No BOOT helper, old patch, publication command or PR #1 operation is repeated.

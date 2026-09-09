@@ -1,6 +1,6 @@
 # Project state
 
-**Record prepared:** 2026-09-09T17:42:09Z (coordinator record; underlying GitHub/operator event times are recorded separately). **Package:** 1.3. **Architecture:** 1.5.1. **State:** BOOT-001 source integration completed and bounded documentation integration checks passed; records-only closeout; product implementation not started.
+**Record prepared:** 2026-09-09T18:57:00Z (coordinator clarification after independent closeout review; underlying event times remain separately recorded). **Package:** 1.3. **Architecture:** 1.5.1. **State:** BOOT-001 source integration completed and bounded documentation integration checks passed; records-only closeout branch under review/correction; product implementation not started.
 
 | Field | Value |
 |---|---|
@@ -16,7 +16,10 @@
 | Integration checks | PASS within bounded documentation scope; see `records/TEST_EVIDENCE_INDEX.csv` and PR chronology comment |
 | GitHub controls | `main` observed protected. Detailed branch-protection GET returns 403 because the managed connector lacks Administration read access; individual saved-rule/app/automation checks retain owner-observation provenance |
 | Task branch | `task/BOOT-001` retained at `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1`; no branch deletion requested |
-| Records follow-up | This file is the records-only BOOT-001 closeout subject. Its own bookkeeping commit/PR is intentionally not self-referenced; verify current `main` before the next task |
+| Records closeout branch / base | `records/BOOT-001-closeout` / `880f59d86ae936b2c4968378bc6a0b08ba61092f` |
+| Reviewed D03 closeout candidate / tree | `10a24fa5a30fe77515800f58fef70c060c938c7b` / `a5e3bb63d0a0b4038e496b361f451e971f74b5bd`; independent review: acceptable within records-only evidence, with CO-01/CO-02 low nonblocking clarity findings |
+| Records closeout packet / outputs | `actDrupal_BOOT-001_Closeout_Review_Packet_10a24fa_v1.zip`; `BOOT-001_CLOSEOUT_INDEPENDENT_REVIEW_10a24fa.md`; `BOOT-001_CLOSEOUT_REVIEW_COVERAGE_10a24fa.csv` |
+| Records follow-up | Focused D04 clarification changes only `DOCUMENTATION_REGISTER.csv`, `PROJECT_STATE.md` and `SESSION_HANDOFF.md`. Its successor commit is intentionally UNSET until actually created; current closeout bytes are not represented as already integrated |
 | Product source / source CI / server qualification | Not implemented / NOT_RUN / NOT_RUN |
 | CP-001 | Planned and **not activated by this closeout record** |
 | CP-038 / CP-039 | Cancelled; all other CP tasks remain planned |
@@ -35,4 +38,17 @@
 
 The BOOT-001 checks qualify only the documentation/workflow import. No installer, CI, devbox, release-test, backup-recovery or production behavior is thereby qualified. No workflow/check runs were returned for the merged SHA; absence is not a green CI result. The detailed protection endpoint remains unavailable to the connector and independent source-backup custody remains unverified.
 
-On the next session, first verify the actual current `main`, records-closeout state and applicable controls. If this closeout has been reviewed and integrated, activate CP-001 from that actual current integration head under a fresh bounded task packet. Do not replay BOOT-000, D01, D02, publication or PR #1 operations.
+On the next session, first verify the actual current `main`, `records/BOOT-001-closeout` head, records-closeout state and applicable controls. Read at minimum:
+
+- `coding/records/PROJECT_STATE.md`
+- `coding/records/TASK_LEDGER.csv`
+- `coding/records/REVIEW_LOG.csv`
+- `coding/records/TEST_EVIDENCE_INDEX.csv`
+- `coding/records/SESSION_HANDOFF.md`
+- `coding/records/BOOT-001_REVIEW_FOLLOWUP.md`
+- `coding/records/DOCUMENTATION_REGISTER.csv`
+- `coding/PACKAGE_CHANGELOG.md`
+- `coding/tasks/BOOT-001.md`
+- the external D03 closeout review/coverage named above and any later focused D04 review output.
+
+If the records-only closeout has then been reviewed and integrated, activate CP-001 from the actual current integration head under a fresh bounded task packet. Do not replay BOOT-000, D01, D02, publication or PR #1 operations.

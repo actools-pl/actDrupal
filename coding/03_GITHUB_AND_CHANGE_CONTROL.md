@@ -1,6 +1,6 @@
 # GitHub and change control
 
-This is the human-authorized development workflow for the accepted v1.5.1 rewrite. GitHub stores authoritative source and project records; coding uses ordinary ChatGPT chats outside Work and Projects. Select either the human-Git route or the optional bounded direct-GitHub route according to actual access in that session. Neither route changes review, evidence or merge requirements. No chat's memory, model verdict or screenshot replaces a commit and evidence receipt. This document supplies a workflow, not a configured repository or working CI system.
+This is the human-authorized development workflow for the accepted v1.5.1 rewrite. GitHub stores authoritative source and project records; coordination/coding use ordinary ChatGPT chats outside Work and Projects; reviewer-only interface selection follows [CPD-12](records/REVIEW_ROUTE_DECISION.md), without adding source-write or execution authority. Select either the human-Git route or the optional bounded direct-GitHub route according to actual access in that session. Neither route changes review, evidence or merge requirements. No chat's memory, model verdict or screenshot replaces a commit and evidence receipt. This document supplies a workflow, not a configured repository or working CI system.
 
 ## 1. New repository and product scope
 

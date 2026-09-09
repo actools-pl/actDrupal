@@ -2,7 +2,7 @@
 
 **Actools Coding Package 1.3 — fresh-install revision • 8 September 2026**\
 **Product baseline:** Actools Drupal Community architecture 1.5.1\
-**Working mode:** ordinary ChatGPT **outside Work and Projects**, using the operator's requested **5.6 sol / Extra High** setting; human-authorized GitHub source control, with direct-chat and human-Git routes; one disposable devbox and one release-test server at Hetzner.
+**Working mode:** coordination and coding use ordinary ChatGPT **outside Work and Projects**, with the operator's requested **5.6 sol / Extra High** setting. Reviewers use **Work / ChatGPT 6 Astra while usage is available**, then ordinary-chat **5.6 sol** under [CPD-12](records/REVIEW_ROUTE_DECISION.md). Model labels are operator-reported choices. Human-authorized GitHub source control, direct-chat/human-Git routes and the two Hetzner test roles are unchanged.
 
 This is the human instruction manual for running the entire coding process. The person following it is called the **operator**. ChatGPT proposes and reviews changes and may perform explicitly authorized GitHub operations through the selected route. The human retains integration authority and controls real-machine execution. No conversation is the authoritative project record.
 
@@ -23,7 +23,7 @@ The package can be copied into a reviewed `coding/` directory on a reviewed task
 | Step | Human action | Must be available before continuing |
 |---|---|---|
 | 1. Prepare | Verify records and Git; activate one bounded task | Actual base, allowed files/effects and acceptance criteria |
-| 2. Supply context | Open a normal chat with its role prompt; provide attachments or exact commit-bound readable files | Required files actually read; partial/missing input reported honestly |
+| 2. Supply context | Open the role-appropriate fresh conversation under CPD-12; provide its prompt, attachments or exact commit-bound readable files | Required files actually read; partial/missing input reported honestly |
 | 3. Receive | Save a complete patch/file delivery, or verify the direct GitHub candidate | Delivery manifest, exact base/candidate and complete changed-file content |
 | 4. Review | Inspect the actual complete change and start a fresh reviewer chat | Actual candidate and full material review coverage |
 | 5. Test | Run selected reviewed commands on the identified test target | Real receipts, protected credentials and known effects |
@@ -39,9 +39,9 @@ Basic skills are required: opening/editing a file, uploading an attachment, chec
 
 Shell examples in the runbooks name their shell and execution location. Bash examples belong in a Bash terminal; do not paste them unchanged into PowerShell. Uppercase tokens such as `BASE_COMMIT` or `FILE` are placeholders, not literal values. The task card must replace them with verified values before execution. Never guess the target server, branch, command or missing credential to get past a placeholder.
 
-Ordinary chat is not assumed to have a live checkout, SSH access, background execution, automatic discovery of repository instructions or access to another conversation's attachments. Use fresh normal chats outside Work and Projects. If an ordinary chat offers a useful file-generation or local analysis tool, record what it actually did; the process still works when the model can return only text. The human operates servers. GitHub source operations follow the selected authorized route below; a connection does not itself grant task authority.
+Ordinary chat is not assumed to have a live checkout, SSH access, background execution, automatic discovery of repository instructions or access to another conversation's attachments. Use fresh ordinary chats for coordination/coding; reviewer conversations follow [CPD-12](records/REVIEW_ROUTE_DECISION.md). If an ordinary chat offers a useful file-generation or local analysis tool, record what it actually did; the process still works when the model can return only text. The human operates servers. GitHub source operations follow the selected authorized route below; a connection does not itself grant task authority.
 
-Select the requested **5.6 sol / Extra High** setting in the actual interface if available and record the observed selection. Prompt text cannot select a hidden model. If that setting is unavailable, record the mismatch and resolve the choice with the owner; do not silently switch to Work, Projects or another model. No API context limit, fixed attachment count or particular tool availability is assumed. The [audit notes](AUDIT_AND_REVISION_NOTES.md) explain the official-source limits.
+For coordination/coding select the requested **5.6 sol / Extra High** setting when available and record the observed selection. Prompt text cannot select a hidden model. The reviewer-only Work/Astra-to-ordinary/5.6 sol switch is already approved by [CPD-12](records/REVIEW_ROUTE_DECISION.md); record it without asking again. Other substitutions require an owner choice. Distinguish observed settings, operator reports and unobservable details. No API context limit, fixed attachment count or particular tool availability is assumed. The [audit notes](AUDIT_AND_REVISION_NOTES.md) explain the official-source limits.
 
 | Term | Meaning in this manual |
 |---|---|
@@ -59,7 +59,7 @@ Select the requested **5.6 sol / Extra High** setting in the actual interface if
 | Direct GitHub | ChatGPT uses available connected GitHub operations for the bounded task | Verify actual access and required read/write capabilities in this chat; name the repository, branch, base, file allowlist and permitted operations |
 | Human Git | ChatGPT delivers complete patches/files; the operator uses the trusted Git client | Preserve the existing RB02/RB10 checks, actual saved-file identities and clean-base workflow |
 
-Both routes use ordinary chats outside Work and Projects, the same product specification, full review coverage, real test evidence and human integration authority. No connector is required for the fallback route. A GitHub link is not a read receipt; a missing write capability must not be worked around by moving to a different interface or asking for tokens in chat.
+Both source-delivery routes retain ordinary coordination/coding sessions, the same product specification, full review coverage, real test evidence and human integration authority. Reviewer-only use of Work under CPD-12 does not extend either route's write or execution authority. No connector is required for the fallback route. A GitHub link is not a read receipt; a missing write capability must not be worked around by moving to a different interface or asking for tokens in chat.
 
 Once a bounded task is authorized, routine edits, commits and corrections within its allowed operations can proceed without asking again for every file. A task does not implicitly authorize merge, changing protection, enabling CI with additional authority, creating infrastructure or publishing a release. Use existing explicit authorization where it covers the actual action; otherwise present the completed reviewable candidate and the concrete additional decision needed.
 
@@ -99,7 +99,7 @@ Use the [coordinator](prompts/01_COORDINATOR.md), [coder](prompts/02_CODER.md), 
 3. Activate [BOOT-000](tasks/BOOT-000.md). Review the three seed files, establish a new root commit in a fresh checkout and publish/verify it within the recorded startup authority. No existing codebase or history is imported. Record the exact root and actual protection/automation state.
 4. Use `main` for integration and `task/BOOT-001` from that verified root. Activate [BOOT-001](tasks/BOOT-001.md), import the package at `coding/`, deliberately add the root README pointer and review the complete change.
 5. After BOOT review, merge and applicable checks, activate CP-001 from the actual integration SHA. It introduces the minimal Python package, license/notices and new source CI. Required check names are configured only after the real checks exist and their behavior is verified.
-6. Use the existing ordinary-chat model/effort and human-Git/direct route choices. Do not ask the operator repeatedly for settings or authority already supplied for this session/task.
+6. Use the existing coordination/coding model/effort and human-Git/direct route choices, plus the approved reviewer selection/fallback in CPD-12. Do not ask the operator repeatedly for settings or authority already supplied for this session/task.
 7. Establish the environment register and independent new-project backup practice as real work requires them. Test servers, production endpoints and credentials are not needed just to author the initial schemas.
 
 The architecture retains new-site backup/restore, supported updates and full security/UX qualification. Existing-site migration and legacy backup import are excluded. The original v1.5 report in `reference/` is historical evidence only; current coders use v1.5.1. CP-038/039 remain cancelled identifiers, with no active dependents.
@@ -113,7 +113,7 @@ Follow [RB01 — start or resume](runbooks/RB01_START_OR_RESUME_A_SESSION.md):
 3. Check whether there is an unfinished mutation or unresolved review. Resume that bounded work before opening a conflicting task.
 4. Select one dependency-ready task and fill its actual base commit, scope, input files, tests and documentation duties.
 5. Build the context packet described in [context and handoff](04_CHAT_CONTEXT_AND_HANDOFF.md), using [CONTEXT_PACKET](templates/CONTEXT_PACKET.md). Include full relevant files and precise baseline sections by safe attachments or verified commit-bound reads; record actual coverage and inspect material before exposing it to chat.
-6. Start the appropriate normal chat with the matching prompt and identified inputs; recheck any required connector access in that chat. Require a short read receipt identifying full, partial, unavailable and missing material. Record a conversation reference, but keep all decisions and outputs in repository-backed records.
+6. Start the role-appropriate fresh conversation under CPD-12 with the matching prompt and identified inputs; recheck any required connector access in that conversation. Require a short read receipt identifying full, partial, unavailable and missing material. Record a conversation reference, but keep all decisions and outputs in repository-backed records.
 
 Size the task so that the relevant complete files, tests, documentation and reviewable change can be handled reliably in one bounded context. Attach an architecture index and exact applicable excerpts with access to the full baseline; asking the model to repeat the entire specification is unnecessary. A partial interface or missing security helper is not a safe substitute for context. Split a large parent task into coherent recorded slices without marking the parent complete early.
 
@@ -258,4 +258,4 @@ The first technical milestone is an installed narrow operation that validates in
 
 ## 14. Evidence status of this package
 
-The v1.3 revision and input identities are recorded in [AUDIT_AND_REVISION_NOTES](AUDIT_AND_REVISION_NOTES.md). [PACKAGE_VALIDATION](PACKAGE_VALIDATION.md) records package checks and their limits. The standalone Start Here file matches this guide inside the ZIP. Distribution checksums detect changed bytes; they are not signatures or product qualification. Current tasks have fresh records; earlier repository results are not copied into them.
+The v1.3 revision and input identities are recorded in [AUDIT_AND_REVISION_NOTES](AUDIT_AND_REVISION_NOTES.md). [PACKAGE_VALIDATION](PACKAGE_VALIDATION.md) records package checks and their limits. The original-distribution standalone Start Here matched its original ZIP copy. This adopted guide includes explicitly manifested BOOT-001 corrections and the CPD-12 reviewer decision; it is not claimed byte-identical to that frozen standalone file. Distribution checksums detect changed bytes; they are not signatures or product qualification. Current tasks have fresh records; earlier repository results are not copied into them.

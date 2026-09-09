@@ -10,7 +10,7 @@ This is the human execution breakdown of v1.5.1, not a replacement feature regis
 
 P01–P12 below are **coding-package milestone labels** organizing the accepted architecture for human execution. They do not rename architecture M0–M9. Work-package numbers identify owners and are not a linear implementation order. CP task numbers identify reviewable work, not a command interface.
 
-Ordinary ChatGPT with the user's selected 5.6 sol Extra High setting supplies proposed code, review and documentation. The human retains GitHub integration authority and operates test hosts; bounded GitHub source operations may use the verified direct-chat route or the human-Git route. The mutable devbox is for development/destructive experiments; the separate release-test box receives reviewed candidate packages through the runbook. No assistant response is evidence that a command ran.
+Ordinary ChatGPT with the user's selected 5.6 sol Extra High setting supplies proposed code and documentation; reviewer-only selection and fallback follow [CPD-12](records/REVIEW_ROUTE_DECISION.md). The human retains GitHub integration authority and operates test hosts; bounded GitHub source operations may use the verified direct-chat route or the human-Git route. The mutable devbox is for development/destructive experiments; the separate release-test box receives reviewed candidate packages through the runbook. No assistant response is evidence that a command ran.
 
 ## 2. Start and readiness
 
@@ -191,7 +191,7 @@ At P04 prove the complete fixture before host mutation. At P05 qualify rescue an
 
 Every activated card records: exact WP owner; applicable F/control/UX-R/UX-T/UXS-C and G IDs; exact source sections; input contract versions; effects and authority; owned files; meaningful failure and positive cases; test environment; documentation targets; reviewer findings; exact reviewed candidate; evidence and merged commit.
 
-The initial ledger contains BOOT-001 plus 51 CP tasks. It is a starting work breakdown, not an estimate of 52 chat turns. Larger tasks can need multiple bounded review/fix cycles; one complex adapter may need extra child cards after its interfaces are known. No calendar or monetary estimate is implied.
+The initial ledger contains 53 parent identifiers: BOOT-000, BOOT-001 and CP-001 through CP-051, including the two cancelled CP scope records. It is a starting work breakdown, not an estimate of 53 chat turns. Larger tasks can need multiple bounded review/fix cycles; one complex adapter may need extra child cards after its interfaces are known. No calendar or monetary estimate is implied.
 
 The task ledger records acceptance; `CHANGELOG.md` explains user-facing changes; release notes describe supported behavior and known limits. A changed commit does not silently inherit an earlier PASS. A merged patch is not automatically a released artifact, and a released artifact is not automatically production-qualified for every machine/profile.
 
@@ -204,6 +204,6 @@ Annex UX Phase 2A terminal menus, Phase 2B private dashboard and Phase 2C browse
 The two-box development workflow is external engineering infrastructure. It does not add managed staging or multi-host application orchestration to Actools.
 
 
-## 6. Fresh-install scope qualification
+## 8. Fresh-install scope qualification
 
 Architecture §18.11 adds FRESH-T01–T04 within existing owners/gates: reject conflicting populated targets and bind genuine resume to its journal; expose no migration/discovery/legacy-reader entrypoint; reject foreign recovery inputs before effects; qualify native own-site recovery including replacement-host operation and complete RPO/RTO. CP-002/CP-005/CP-010 own the early contract/dispatch slices; CP-022/CP-033/CP-035/CP-050 close installed cases as applicable. CP-040's graph marks excluded migration requirements NOT_APPLICABLE with their decision reference, never PASS. The removal does not delete WP24's DR responsibilities or its other applicable gates.

@@ -14,6 +14,8 @@ Status: template; no review or approval has occurred.
 - Direct route candidate read-back / parent / current-head observation, if applicable:
 - Relevant surrounding source/interfaces read:
 - Reviewer: human or AI, role/session identifier, model label if useful:
+- Actual or operator-reported interface/model/effort; CPD-12 choice/fallback; unavailable details:
+- Usage handoff, previous report/coverage, attribution of earlier reading/tests and remaining material ranges:
 - Review date (UTC):
 - Prior review superseded/extended:
 

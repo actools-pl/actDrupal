@@ -1,5 +1,13 @@
 # Coding package changelog
 
+## Working correction — BOOT-001-D02-v1, not a new distribution release
+
+- Prepare F01: align RB01's pre-write, BOOT-000 result, new-source backup and resume stages with RB11; do not repeat completed operations or permit unsafe triggers.
+- Prepare F02: reconcile the 53 ledger parent identifiers (including two cancelled CP records) and roadmap heading 8; CP rows/dependencies unchanged.
+- Record owner-approved CPD-12: Work / ChatGPT 6 Astra reviewer while usage is available, ordinary 5.6 sol fallback; update reviewer-facing instructions without adding source/server authority or claiming an ordinary-chat walkthrough.
+- Preserve the initial review and coverage as external byte-identified evidence; record F01/F02 as open and G01/E01–E04 as remaining limits. New correction commit, re-review, operator application and integration are pending in this snapshot.
+- Preserve original distribution SHA256SUMS, both architectures, both helpers and all root files. P02 lists the explicit additional working edits and records; historical D01/v1.3 notes below are not current status.
+
 ## Working repository adoption — BOOT-001-D01, not a new distribution release
 
 - Import the v1.3 package under coding/ and add its root README entry point.

@@ -1,6 +1,6 @@
 # Context packet — <task ID> / <packet revision>
 
-Template only. The operator or an authorized chat records actually observed identities before use. This packet transfers context into one ordinary chat; it grants no repository access, server access or authority beyond the current task.
+Template only. The operator or an authorized chat records actually observed identities before use. This packet transfers context into one role-appropriate conversation under [CPD-12](../records/REVIEW_ROUTE_DECISION.md); it grants no repository access, server access or authority beyond the current task.
 
 ## Identity and purpose
 
@@ -9,6 +9,8 @@ Template only. The operator or an authorized chat records actually observed iden
 | Task / task-card revision / current state | <...> |
 | Packet revision / prepared at UTC / operator | <...> |
 | Role and bounded outcome | <coordinator / coder / reviewer / documentation reviewer> |
+| Interface / model / effort / provenance | <actual observed value, operator-reported value, or not observable; apply CPD-12 for reviewer-only choice> |
+| Reviewer switch / prior coverage | <reason, prior report and exact read/unread boundaries, or not applicable> |
 | Repository / branch / exact full base SHA | <verified values; UNSET if not yet observed> |
 | Route / capability verification in this chat | <human-Git / direct GitHub; available operations and UTC observation> |
 | Task authorization reference / actor / allowed operations | <existing user authorization and exact boundary; no secrets> |

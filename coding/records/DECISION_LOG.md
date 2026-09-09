@@ -1,10 +1,10 @@
 # Decision log
 
-**Current revision:** 8 September 2026. User instructions govern scope; current product authority is Architecture v1.5.1. Decisions do not constitute executed implementation or repository/server actions.
+**Current working revision:** 9 September 2026; prior distribution/startup entries retained below. User instructions govern scope; current product authority is Architecture v1.5.1. Decisions do not constitute executed implementation or repository/server actions.
 
 | ID | Status | Decision | Authority and effect |
 |---|---|---|---|
-| CPD-01 | Retained | Ordinary ChatGPT outside Work/Projects; requested 5.6 sol / Extra High | Existing accepted operator workflow. Record the actual displayed setting once; reuse supplied session information. |
+| CPD-01 | Superseded for reviewers by CPD-12; retained for coordination/coding | Ordinary ChatGPT outside Work/Projects; requested 5.6 sol / Extra High | Earlier choice retained historically; reviewer-only selection/fallback now follows the explicit owner decision below. |
 | CPD-02 | Retained | Disposable Hetzner devbox and separate release-test server | Existing accepted two-box workflow; independent production backup/monitoring still require qualification. |
 | CPD-03 | Retained | GitHub stores authoritative source and project records | Exact commits, artifacts and evidence identify work; chat is supplementary. |
 | CPD-04 | Retained | Laptop supports administration and controlled independent exercises | No assumed always-on service or selected Google Drive backend. |
@@ -28,3 +28,9 @@ Recorded at 2026-09-08T21:58:10Z; underlying operator actions were reported in t
 - Owner configured sole-maintainer main protection: require a PR and resolved conversations, no administrator bypass, no force pushes/deletion; no second-account approval requirement. PDF supplies individual setting evidence; connected branch summary reports protected=true. Required source-CI checks remain pending until CP-001 introduces and verifies them.
 - BOOT-001-D01 imports the validated v1.3 package and updates its execution records plus root README pointer. No product scope, architecture, helper code, original checksum manifest or historical bytes are changed. No further settings/source-publication/server authority is inferred.
 - Independent candidate review and human integration remain required. The displayed model/effort is not established by available receipts; the package's requested setting is retained without inventing a matching UI observation.
+
+## CPD-12 — Reviewer route and CPD-13 — BOOT-001 correction scope
+
+**Recorded:** 2026-09-09T07:16:46Z; user message date 9 September 2026, exact user-action time not supplied. MP Singh explicitly chooses Work / ChatGPT 6 Astra for review while usage is available and ordinary 5.6 sol as fallback, and directs proceeding with the correction. [CPD-12](REVIEW_ROUTE_DECISION.md) records reviewer-only precedence, observed-versus-reported labels, usage handoff and unchanged authority/coverage gates. The previous report remains useful; its old interface-evidence limitation is preserved rather than erased.
+
+**CPD-13:** proceed with one bounded incremental documentation correction from operator-reported candidate `153d937d56a08000e4cdf41312fbd5cf11567019` / tree `8690def93e4ef3c7dc71706452622a0128d15807`. Fix independent-review F01 and F02; incorporate CPD-12 consistently in operative guides/prompts and necessary records. [BOOT-001 P02](../tasks/BOOT-001.md) names the complete extended allowlist. P01/D01's eight-file package-edit restriction described that earlier delivery and does not prohibit this explicitly scoped increment. This does not reopen product scope, rewrite frozen baselines, close findings, authorize publishing/merging or activate CP-001. Local application/staging and checks only are selected in D02; a later actual candidate and re-review remain required.

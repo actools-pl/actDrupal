@@ -17,9 +17,9 @@ Before remote actions, follow [RB11](RB11_NEW_REPOSITORY_STARTUP.md) for current
 
 Use the packet's file inventory to identify missing or conflicting revisions. If checksums are used, compute them from the actual saved bytes on the trusted laptop; a model must leave an uncomputed digest unresolved. A checksum supplied beside the same files detects accidental mismatches, not publisher authenticity.
 
-## 2. Start a normal chat and verify access
+## 2. Start the role-appropriate conversation and verify access
 
-Open an ordinary ChatGPT chat outside Work and Projects. Select the user's requested model/reasoning setting if actually available in that interface, and record the observed selection. Prompt text does not change the account's model picker. Do not silently switch interface or model to get around an unavailable option.
+For coordination/coding, open an ordinary ChatGPT chat outside Work and Projects. For independent/documentation review, use the approved Work / ChatGPT 6 Astra preference and ordinary 5.6 sol fallback in [CPD-12](../records/REVIEW_ROUTE_DECISION.md). Record the actual displayed or operator-reported setting, unavailable details and any usage-triggered switch; no repeated approval is needed between those two review routes. Prompt text does not select a model. Other substitutions require an owner choice. Work capability does not authorize setup scripts, repository writes or server access. The same complete-input/output rules apply in both reviewer interfaces.
 
 Attach the packet files and paste the appropriate complete role prompt. Ask the model to report which files it actually read, which were partial/unavailable, and which required dependencies are missing. A filename displayed in chat is not sufficient evidence of readable content.
 

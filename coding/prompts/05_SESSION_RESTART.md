@@ -3,13 +3,14 @@
 **Active scope:** repository `actools-pl/actDrupal`, architecture v1.5.1, fresh installations only. No existing-site discovery/import/cutover or legacy age reader. Use `main` integration after BOOT-000, then task branches; original v1.5 in `reference/` is historical only. CP-038/039 are cancelled and cannot block active tasks. Own-site backup, restore, disaster recovery and supported updates remain required.
 
 
-Use in a new ordinary chat after a long interruption, model change or uncertain context. Do not paste secrets or raw server dumps. Read the saved handoff, verify current chat capabilities and obtain fresh repository status first. Direct GitHub operation is optional; human-Git remains the fallback. Use [CONTEXT_PACKET](../templates/CONTEXT_PACKET.md) and [HANDOFF](../templates/HANDOFF.md); no Work, Project or shared-memory feature is needed.
+Use in a new role-appropriate conversation after a long interruption, model change or uncertain context. Coordination/coding remain ordinary-chat; reviewer-only Work selection and ordinary fallback follow [CPD-12](../records/REVIEW_ROUTE_DECISION.md). Do not paste secrets or raw server dumps. Read the saved handoff, verify current chat capabilities and obtain fresh repository status first. Direct GitHub operation is optional; human-Git remains the fallback. Use [CONTEXT_PACKET](../templates/CONTEXT_PACKET.md) and [HANDOFF](../templates/HANDOFF.md); no Work, Project or shared-memory feature is needed.
 
 ```text
 Resume the Actools task using repository-backed records, not conversation memory.
 
 CURRENT INPUTS SUPPLIED OR READ AT IMMUTABLE COMMITS
 - Role for this session: coordinator/coder/reviewer/documentation reviewer.
+- Actual or operator-reported interface/model/effort; CPD-12 reviewer switch and reason when applicable; prior report, reading boundaries and evidence attribution.
 - TASK_CARD and task ID/state.
 - PROJECT_STATE, TASK_LEDGER and SESSION_HANDOFF.
 - Exact current repository/branch/base/candidate SHA from actual Git/GitHub observations.

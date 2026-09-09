@@ -8,7 +8,7 @@
 | Installation source | Fresh installations only | No existing-site discovery/import/cutover or legacy age reader |
 | Product lifecycle | Own-site backup, restore, DR and supported updates | Internal schema updates and trusted backup re-encryption retain their controls |
 | Product authority | Architecture v1.5.1 | Original v1.5 is byte-exact historical reference only |
-| Human workflow | Ordinary chat; requested 5.6 sol / Extra High | Record actual supplied setting; explicit complete files/context and receipts |
+| Human workflow | Ordinary coordination/coding; reviewer-only Work / ChatGPT 6 Astra with ordinary 5.6 sol fallback under [CPD-12](records/REVIEW_ROUTE_DECISION.md) | Record actual or operator-reported setting and fallback; unchanged complete-file, evidence and authority gates |
 | Test topology | Disposable devbox plus release-test server | Separate iteration and qualification; independent backup/monitoring proof remains |
 | Source route | Human Git, or verified bounded direct GitHub | Same review/evidence/authority requirements; bootstrap uses supported root-commit route |
 | Startup | RB11 → BOOT-000 → BOOT-001 → CP-001 | Real new root, complete documentation import, then package skeleton and source CI |
@@ -45,8 +45,8 @@ The architecture's operation statuses, audit statuses, test results and task led
 - Source CI is part of the project; deploying a site CI/CD platform remains outside the accepted first release.
 - No automatic production promotion follows a test milestone or repository merge.
 
-## Keeping the selected ordinary-chat workflow explicit
+## Keeping role-specific review and source routes explicit
 
-This revision uses ordinary chats outside Work and Projects. The operator supplies current instructions and task authority explicitly. Source may arrive through attachments or actual commit-bound connector reads, with delivery manifests and evidence retained in either route. No connector, persistent agent, automated SSH or project memory is required. Record the actual visible model/effort setting; availability on every account or surface is not assumed, and a mismatch needs an explicit choice rather than a silent substitute.
+Coordination/coding use ordinary chats outside Work and Projects; independent and documentation reviewers may use the owner-approved Work route and ordinary fallback in [CPD-12](records/REVIEW_ROUTE_DECISION.md). The operator supplies current instructions and task authority explicitly. Source may arrive through attachments or actual commit-bound connector reads, with delivery manifests and evidence retained in either route. No connector, persistent agent, automated SSH or project memory is required. Record the actual visible model/effort setting; availability on every account or surface is not assumed, and a mismatch needs an explicit choice rather than a silent substitute.
 
-The two GitHub routes remain the accepted process choice, governed by [RB11](runbooks/RB11_NEW_REPOSITORY_STARTUP.md) and [RB12](runbooks/RB12_DIRECT_GITHUB_OPERATIONS.md). Changing to another interface or adding execution/deployment authority is a separately recorded process decision. It must preserve exact code/artifact identity, review, tests and documentation gates. File access or automation does not confer source, execution or deployment authority.
+The two GitHub routes remain the accepted process choice, governed by [RB11](runbooks/RB11_NEW_REPOSITORY_STARTUP.md) and [RB12](runbooks/RB12_DIRECT_GITHUB_OPERATIONS.md). The two CPD-12 review choices and their usage fallback are already owner-approved. Any other interface substitution or added execution/deployment authority needs its separate recorded decision. It must preserve exact code/artifact identity, review, tests and documentation gates. File access or automation does not confer source, execution or deployment authority.

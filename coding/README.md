@@ -4,7 +4,7 @@ Start with [00_START_HERE_CODER_DOCUMENTATION.md](00_START_HERE_CODER_DOCUMENTAT
 
 **Repository:** https://github.com/actools-pl/actDrupal. **Product authority:** [Architecture v1.5.1](baseline/Actools_Drupal_Community_Rewrite_Architecture_Implementation_v1.5.1.md). **Scope:** fresh installations only; no existing-site migration or legacy backup import.
 
-Use ordinary ChatGPT with the existing operator-selected model/effort, a trusted human Git client or verified bounded connector route, one disposable devbox and one release-test server. Exact context, independent review, meaningful evidence, incremental documentation and human integration authority remain.
+Use ordinary coordination/coding chats and the [CPD-12 reviewer route](records/REVIEW_ROUTE_DECISION.md) with the recorded operator-selected model/effort, a trusted human Git client or verified bounded connector route, one disposable devbox and one release-test server. Exact context, independent review, meaningful evidence, incremental documentation and human integration authority remain.
 
 The sequence is [RB11](runbooks/RB11_NEW_REPOSITORY_STARTUP.md) and [BOOT-000](tasks/BOOT-000.md) for the new root, [BOOT-001](tasks/BOOT-001.md) for the documentation import, then CP-001 for the minimal implementation package/CI. Keep the folders together. See the [index](10_PACKAGE_INDEX.md), [decisions](records/DECISION_LOG.md) and [validation](PACKAGE_VALIDATION.md).
 

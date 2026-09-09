@@ -1,5 +1,14 @@
 # Coding package changelog
 
+## BOOT-001 integration closeout — 9 September 2026
+
+- Record accepted corrected candidate `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1`, normal PR #1 merge `880f59d86ae936b2c4968378bc6a0b08ba61092f` and unchanged accepted tree `27ced31b2b6d0e2d5ea80d1fd4679981d611b38d`.
+- Record final independent re-review disposition: F01/F02 closed, material G01 reading resolved, no new material BOOT-001 source defect.
+- Record bounded merged-result documentation checks as passing with retained evidence limits; the adopted-copy integrity exit 1 remains the expected manifested-difference diagnostic.
+- Reconcile task/review/evidence/handoff records only. No product source, CI workflow, dependency, server behavior, release qualification or CP-001 activation is introduced.
+- Preserve the D01/D02 sections below as historical preparation snapshots.
+
+
 ## Working correction — BOOT-001-D02-v1, not a new distribution release
 
 - Prepare F01: align RB01's pre-write, BOOT-000 result, new-source backup and resume stages with RB11; do not repeat completed operations or permit unsafe triggers.

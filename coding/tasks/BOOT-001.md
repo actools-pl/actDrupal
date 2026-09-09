@@ -1,6 +1,6 @@
 # BOOT-001 — Import the coding workflow into actDrupal
 
-**State:** changes_requested; F01/F02 correction and CPD-12 reviewer amendment prepared in P02, not yet applied, committed or re-reviewed. **Owner:** WP01. **Milestone:** P01. **Depends on:** BOOT-000 accepted with a verified published root. **Architecture:** v1.5.1 §§1.5/7.3/13.1/18.5/18.6.
+**State:** merged; accepted D02 candidate `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1` integrated through PR #1 as normal merge `880f59d86ae936b2c4968378bc6a0b08ba61092f`; bounded documentation integration checks passed. Records-only closeout reconciles later chronology; CP-001 remains planned and is not activated by this card. **Owner:** WP01. **Milestone:** P01. **Depends on:** BOOT-000 accepted with a verified published root. **Architecture:** v1.5.1 §§1.5/7.3/13.1/18.5/18.6.
 
 Use [Start Here](../00_START_HERE_CODER_DOCUMENTATION.md), [change control](../03_GITHUB_AND_CHANGE_CONTROL.md) and [RB11](../runbooks/RB11_NEW_REPOSITORY_STARTUP.md). Select human Git or the currently supported bounded direct route under RB12. No server action is authorized by this card.
 
@@ -114,3 +114,21 @@ Compare roadmap parent count and heading sequence with every ledger ID; preserve
 Before application verify actual branch/HEAD/tree, all parent files, clean index/worktree and expected remote refs. Run the supplied guarded D02 helper once; it uses Git applicability checking before local application. A later commit, push, PR, merge, settings change, workflow dispatch, dependency install or server action is not part of this step. Preserve unexpected or partially applied state without reset/amend/retry.
 
 After an actual incremental commit, obtain re-review of the complete correction and final root-to-candidate change, including F01/F02 and material G01 reading. Keep original review evidence and CPD-12 provenance. Do not close findings, accept the task or begin CP-001 merely because preparation checks pass. Human acceptance and integration remain separate.
+
+## BOOT-001-P03 — Final integration and records closeout
+
+This section is the later chronology for P01/P02. It does not rewrite those historical delivery snapshots or authorize replay of their commands.
+
+| Field | Final BOOT-001 fact |
+|---|---|
+| Accepted corrected candidate / tree | `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1` / `27ced31b2b6d0e2d5ea80d1fd4679981d611b38d` |
+| Independent re-review | BOOT-001-IR-7c5289b: acceptable within stated task evidence; F01/F02 closed; material G01 reading resolved |
+| Human acceptance | Supplied separately for the exact corrected candidate with retained limitations |
+| Publication / PR | `task/BOOT-001` published at the accepted head; PR #1 created and evidence attached |
+| Integration | Normal merge commit `880f59d86ae936b2c4968378bc6a0b08ba61092f`; parents are the original BOOT base and accepted candidate; integrated tree equals accepted tree |
+| Merged-result checks | Bounded documentation integration checks passed; durable details are indexed in `records/TEST_EVIDENCE_INDEX.csv` and the PR chronology |
+| Retained limits | Detailed protection GET unavailable to the managed connector (403); owner-control provenance retained; no green CI implied; independent source-backup custody unverified |
+| Product consequence | Documentation/workflow import only; no installer/CI/server/product qualification |
+| Next task | CP-001 remains planned until this records-only closeout is reviewed/integrated and the next session verifies the actual current `main` |
+
+The records-only closeout is intentionally a separate protected change so the tested merge SHA above remains distinct from its bookkeeping commit. Its own future merge SHA is not self-referenced here. Do not delete `task/BOOT-001`, alter protection, replay BOOT helpers or activate CP-001 merely because this closeout is staged.

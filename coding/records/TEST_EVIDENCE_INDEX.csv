@@ -1,1 +1,2 @@
 receipt_id,task_id,test_id,source_commit,artifact_sha256,environment_id,environment_generation,started_at_utc,result,receipt_ref
+BOOT-001-INT-880f59d,BOOT-001,BOOT-001-DOC-INTEGRATION,880f59d86ae936b2c4968378bc6a0b08ba61092f,NOT_APPLICABLE_SOURCE_ONLY,coordinator-isolated-linux,ephemeral-20260909T154105Z,2026-09-09T15:41:05Z,PASS,https://github.com/actools-pl/actDrupal/pull/1#issuecomment-5604636531

@@ -1,3 +1,6 @@
 review_id,task_id,candidate_commit,reviewer_ref,finding_id,severity,status,record_ref,resolution_commit
-BOOT-001-IR-153d937,BOOT-001,153d937d56a08000e4cdf41312fbd5cf11567019,AI reviewer; owner reports Work / ChatGPT 6 Astra,F01,medium,open,records/BOOT-001_REVIEW_FOLLOWUP.md,
-BOOT-001-IR-153d937,BOOT-001,153d937d56a08000e4cdf41312fbd5cf11567019,AI reviewer; owner reports Work / ChatGPT 6 Astra,F02,low,open,records/BOOT-001_REVIEW_FOLLOWUP.md,
+BOOT-001-IR-153d937,BOOT-001,153d937d56a08000e4cdf41312fbd5cf11567019,AI reviewer; owner reports Work / ChatGPT 6 Astra,F01,medium,closed,records/BOOT-001_REVIEW_FOLLOWUP.md,7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1
+BOOT-001-IR-153d937,BOOT-001,153d937d56a08000e4cdf41312fbd5cf11567019,AI reviewer; owner reports Work / ChatGPT 6 Astra,F02,low,closed,records/BOOT-001_REVIEW_FOLLOWUP.md,7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1
+BOOT-001-IR-7c5289b,BOOT-001,7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1,AI independent re-review; owner reports Work / ChatGPT 6 Astra,F01,medium,closed,records/BOOT-001_REVIEW_FOLLOWUP.md,7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1
+BOOT-001-IR-7c5289b,BOOT-001,7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1,AI independent re-review; owner reports Work / ChatGPT 6 Astra,F02,low,closed,records/BOOT-001_REVIEW_FOLLOWUP.md,7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1
+BOOT-001-IR-7c5289b,BOOT-001,7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1,AI independent re-review; owner reports Work / ChatGPT 6 Astra,G01,coverage,resolved,records/BOOT-001_REVIEW_FOLLOWUP.md,7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1

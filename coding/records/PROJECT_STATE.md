@@ -1,37 +1,54 @@
 # Project state
 
-**Record prepared:** 2026-09-09T07:16:46Z (preparer clock, not operator action time). **Package:** 1.3, BOOT-001 P02 working correction; not a new distribution. **Architecture:** 1.5.1. **State:** initial_candidate_locally_committed; independent_review_changes_requested; incremental_correction_prepared_not_applied; implementation_not_started.
+**Record prepared:** 2026-09-09T18:57:00Z (coordinator clarification after independent closeout review; underlying event times remain separately recorded). **Package:** 1.3. **Architecture:** 1.5.1. **State:** BOOT-001 source integration completed and bounded documentation integration checks passed; records-only closeout branch under review/correction; product implementation not started.
 
 | Field | Value |
 |---|---|
-| Canonical repository / ID | https://github.com/actools-pl/actDrupal / 1361769952; previously observed public |
-| Integration / active task branch | main / task/BOOT-001 |
+| Canonical repository / ID | https://github.com/actools-pl/actDrupal / 1361769952; repository remained public during BOOT-001 |
 | Scope | Fresh installations only; no existing-site migration or legacy backup import |
 | Active specification / historical reference | Frozen v1.5.1 / non-operative unchanged v1.5 |
-| Source route / local checkout | Human Git on Windows; `$HOME/actDrupal-work/actDrupal` |
-| Coordination/coding / reviewer mode | Ordinary-chat coordination/coding retained; Work / ChatGPT 6 Astra reviewer while usage is available, then ordinary 5.6 sol under [CPD-12](REVIEW_ROUTE_DECISION.md) |
-| Setting provenance | Owner reports Work / ChatGPT 6 Astra. Original review reports Codex Work Mode. No new UI observation; effort unknown. Fallback retains Extra High preference when available. |
-| Owner / merge authority | MP Singh; human integration decision remains separate |
-| Last recorded main / BOOT-000 root | `cc4e94135a5b2709dc907ad799b95b9a4c511f73`; historical publication/readback, recheck before further reliance |
-| BOOT-000 | Accepted bounded bootstrap; [receipt](../tasks/BOOT-000.md); never repeat startup to correct prose |
-| BOOT-001 original base | `cc4e94135a5b2709dc907ad799b95b9a4c511f73` |
-| Last operator-reported local candidate / tree | `153d937d56a08000e4cdf41312fbd5cf11567019` / `8690def93e4ef3c7dc71706452622a0128d15807`; clean task branch in supplied receipt |
-| Correction packet / parent / new candidate | BOOT-001-P02 / `153d937d56a08000e4cdf41312fbd5cf11567019` / UNSET (not committed) |
-| Review / task state | [BOOT-001-IR-153d937](BOOT-001_REVIEW_FOLLOWUP.md): changes_requested; F01/F02 OPEN; G01 unresolved; correction prepared |
-| Publication / PR / merge | No task publication, PR or merge reported; current live state not established by this preparation record |
-| Current delivery effects | D02 applies/stages an incremental patch locally after exact-state checks; no commit, push, PR, merge, settings or server action |
-| Evidence custody | Original reviewer report/CSV and receipts retained by name/hash in controlled external packet; exact operator custody location and independent backup coverage unverified |
-| Product source / CI / server qualification | Not implemented / NOT_RUN / NOT_RUN |
-| CP-038 / CP-039 | cancelled; all other CP tasks remain planned |
+| BOOT-000 root | `cc4e94135a5b2709dc907ad799b95b9a4c511f73` |
+| BOOT-001 accepted candidate / tree | `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1` / `27ced31b2b6d0e2d5ea80d1fd4679981d611b38d` |
+| BOOT-001 PR / tested merge | PR #1 / `880f59d86ae936b2c4968378bc6a0b08ba61092f` |
+| Merge relationship | Normal merge commit with parents `cc4e94135a5b2709dc907ad799b95b9a4c511f73` and `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1`; integrated tree equals the accepted tree |
+| Review | BOOT-001-IR-7c5289b: ACCEPTABLE WITHIN THE STATED BOOT-001 TASK EVIDENCE; F01/F02 closed; material G01 reading resolved |
+| Human acceptance / integration authority | MP Singh accepted the exact candidate and later authorized the normal protected merge; source integration is complete |
+| Integration checks | PASS within bounded documentation scope; see `records/TEST_EVIDENCE_INDEX.csv` and PR chronology comment |
+| GitHub controls | `main` observed protected. Detailed branch-protection GET returns 403 because the managed connector lacks Administration read access; individual saved-rule/app/automation checks retain owner-observation provenance |
+| Task branch | `task/BOOT-001` retained at `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1`; no branch deletion requested |
+| Records closeout branch / base | `records/BOOT-001-closeout` / `880f59d86ae936b2c4968378bc6a0b08ba61092f` |
+| Reviewed D03 closeout candidate / tree | `10a24fa5a30fe77515800f58fef70c060c938c7b` / `a5e3bb63d0a0b4038e496b361f451e971f74b5bd`; independent review: acceptable within records-only evidence, with CO-01/CO-02 low nonblocking clarity findings |
+| Records closeout packet / outputs | `actDrupal_BOOT-001_Closeout_Review_Packet_10a24fa_v1.zip`; `BOOT-001_CLOSEOUT_INDEPENDENT_REVIEW_10a24fa.md`; `BOOT-001_CLOSEOUT_REVIEW_COVERAGE_10a24fa.csv` |
+| Records follow-up | Focused D04 clarification changes only `DOCUMENTATION_REGISTER.csv`, `PROJECT_STATE.md` and `SESSION_HANDOFF.md`. Its successor commit is intentionally UNSET until actually created; current closeout bytes are not represented as already integrated |
+| Product source / source CI / server qualification | Not implemented / NOT_RUN / NOT_RUN |
+| CP-001 | Planned and **not activated by this closeout record** |
+| CP-038 / CP-039 | Cancelled; all other CP tasks remain planned |
+| Evidence custody | Review/acceptance evidence is attached to PR #1; integration chronology is recorded in the later PR comment. Independent source-backup custody remains unverified |
 
-## Earlier controls and evidence limits
+## BOOT-001 evidence anchors
 
-Previously supplied connected branch reads reported protected main at the root and no task branch. The owner PDF displayed PR/conversation-resolution/admin-no-bypass enabled; required approvals/status checks, lock, force pushes and deletion unchecked. The detailed protection endpoint returned 403. These are historical observations and owner-supplied edit-page evidence, not a fresh persisted administration audit or destructive enforcement test.
+- Final independent re-review SHA-256: `dc031405dea1c92fbf33f3f72846916d0be201a985bce1cb0855b0f5a419d7de`.
+- Final review coverage SHA-256: `0e128a51d9f4491929cf5d84c9bf830f89cd2653e01b050fcd6df3a130ec9b92`.
+- Review/acceptance evidence ZIP SHA-256: `7a62ed457367f8995d032437afac5e2beee7730cae5ce49a8a9d81dd8a6d95e9`; attachment: https://github.com/actools-pl/actDrupal/pull/1#issuecomment-5604276344.
+- Integration evidence ZIP SHA-256: `702402f875d384e6d7afa70a98c3ffb460b7cb1ccd56df8cc330a282f73978eb`.
+- Integration results JSON SHA-256: `1065292430eb0577b42e1626bf1ce12d4a59d0087839833bd58cec9570aeaea0`.
+- Merge/integration chronology: https://github.com/actools-pl/actDrupal/pull/1#issuecomment-5604636531.
 
-Bootstrap owner report: allow all actions/reusable workflows; workflow contents/packages read only; Actions PR create/approve permission off; no self-hosted runners or webhooks; ChatGPT Codex Connector installed. No source workflow is in BOOT. This correction does not change settings. Refresh applicable mutable controls and refs before a later authorized remote operation; resolve concrete unsafe triggers before affected writes.
+## Retained limits and next action
 
-## Provenance and next action
+The BOOT-001 checks qualify only the documentation/workflow import. No installer, CI, devbox, release-test, backup-recovery or production behavior is thereby qualified. No workflow/check runs were returned for the merged SHA; absence is not a green CI result. The detailed protection endpoint remains unavailable to the connector and independent source-backup custody remains unverified.
 
-Original ZIP SHA-256 is `948beb79e1507b529388b8664db7b2184d6bd6868d78fb2a42620fa52cd2adf0`. Preserve original SHA256SUMS; working edits and additions use the exact D02 inventories and Git. P01's eight edits remain historical; [P02](../tasks/BOOT-001.md) explicitly extends the correction allowlist. Old preparation snapshots survive in the parent commit and external D01 packet.
+On the next session, first verify the actual current `main`, `records/BOOT-001-closeout` head, records-closeout state and applicable controls. Read at minimum:
 
-Verify clean local HEAD at the exact correction parent and apply/stage D02 once. Preserve any unexpected state; do not rerun D01, reset or amend. Return the actual result. A subsequent candidate, targeted re-review including material G01 handling, owner acceptance, publication/PR, integration and merged-result checks remain separate pending steps. Source backup practice remains an obligation with actual coverage unverified, not a plan relabelled as PASS.
+- `coding/records/PROJECT_STATE.md`
+- `coding/records/TASK_LEDGER.csv`
+- `coding/records/REVIEW_LOG.csv`
+- `coding/records/TEST_EVIDENCE_INDEX.csv`
+- `coding/records/SESSION_HANDOFF.md`
+- `coding/records/BOOT-001_REVIEW_FOLLOWUP.md`
+- `coding/records/DOCUMENTATION_REGISTER.csv`
+- `coding/PACKAGE_CHANGELOG.md`
+- `coding/tasks/BOOT-001.md`
+- the external D03 closeout review/coverage named above and any later focused D04 review output.
+
+If the records-only closeout has then been reviewed and integrated, activate CP-001 from the actual current integration head under a fresh bounded task packet. Do not replay BOOT-000, D01, D02, publication or PR #1 operations.

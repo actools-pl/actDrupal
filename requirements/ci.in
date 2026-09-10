@@ -1,0 +1,10 @@
+# CP-001 direct source-CI inputs. Runtime dependencies for actools-drupal are zero.
+# Resolution target: CPython 3.14.7 on ubuntu-24.04 x86_64.
+# Lock-generation tool (separate environment): pip-tools==7.6.1.
+--only-binary=:all:
+
+build==1.6.0
+pip==26.2.1
+pip-audit==2.10.1
+pytest==9.1.1
+setuptools==84.0.0

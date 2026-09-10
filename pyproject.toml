@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "actools-drupal"
+dynamic = ["version"]
+description = "Development package skeleton for the actDrupal fresh-install installer"
+requires-python = ">=3.14,<3.15"
+dependencies = []
+license = "MIT"
+license-files = ["LICENSE", "NOTICE.md"]
+authors = [{name = "Actools"}]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.14",
+]
+
+[project.scripts]
+actools = "actools.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = false
+
+[tool.setuptools.dynamic]
+version = {attr = "actools.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["actools"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
+pythonpath = ["src", "."]

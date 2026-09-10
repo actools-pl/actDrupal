@@ -1,0 +1,3 @@
+[build-system]
+requires = []
+build-backend = "cp001_intentionally_missing_backend"

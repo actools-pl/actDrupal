@@ -1,38 +1,44 @@
 # Session handoff
 
-**Prepared:** 2026-09-09T18:57:00Z. **Subject:** BOOT-001 records-only closeout after independent review of D03. This handoff records the known branch/base and review inputs without embedding the future SHA of its own successor or bookkeeping merge.
+**Prepared:** 2026-09-10T08:16:34Z. **Subject:** CP-001 bounded local candidate preparation after completed BOOT-001 closeout.
 
-## Completed milestone
+## Authoritative repository point
 
-- BOOT-000 root: `cc4e94135a5b2709dc907ad799b95b9a4c511f73`.
-- BOOT-001 accepted corrected candidate: `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1`, tree `27ced31b2b6d0e2d5ea80d1fd4679981d611b38d`.
-- Independent re-review BOOT-001-IR-7c5289b: acceptable within stated task evidence; F01/F02 closed and material G01 reading resolved.
-- Human acceptance, branch publication and PR #1 completed under separately recorded authority.
-- PR #1 merged normally into `main` as `880f59d86ae936b2c4968378bc6a0b08ba61092f`. GitHub readback showed parents `cc4e94135a5b2709dc907ad799b95b9a4c511f73` and `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1` and the unchanged accepted tree `27ced31b2b6d0e2d5ea80d1fd4679981d611b38d`.
-- Bounded documentation integration checks passed. Durable chronology and actual results are in https://github.com/actools-pl/actDrupal/pull/1#issuecomment-5604636531.
-- The review/acceptance evidence attachment is at https://github.com/actools-pl/actDrupal/pull/1#issuecomment-5604276344 and its downloaded copy matched the prepared ZIP byte-for-byte.
-- `task/BOOT-001` remains retained at the accepted head; it was not deleted.
-- No product source, CI workflow, dependency, server or CP-001 activation occurred.
+- Repository: `actools-pl/actDrupal`, ID `1361769952`.
+- Final CP-001 pre-write GitHub readback: `main` = `dce4e44b13ab19c65d8e9b67243bfeb72a15cdb2`, tree `e189ff949ba8ff79de2302d5e8150ef8838077e3`, observed protected.
+- Remote `task/CP-001` was absent at that readback.
+- Retained BOOT branches remained `task/BOOT-001` = `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1` and `records/BOOT-001-closeout` = `8e378d88bf663a16c685f788bca0d26bb6483a51`.
+- BOOT-000/BOOT-001 and the records-only closeout are complete. Do not replay them.
 
-## Current records-only closeout
+## CP-001 authority and state
 
-- Branch: `records/BOOT-001-closeout`.
-- Closeout base / tested BOOT-001 source merge: `880f59d86ae936b2c4968378bc6a0b08ba61092f`.
-- Reviewed D03 local candidate / reconstructed tree: `10a24fa5a30fe77515800f58fef70c060c938c7b` / `a5e3bb63d0a0b4038e496b361f451e971f74b5bd`.
-- Independent D03 closeout review recommendation: acceptable within the stated records-only evidence; CO-01 and CO-02 are low, open, nonblocking documentation findings.
-- Review packet/output names: `actDrupal_BOOT-001_Closeout_Review_Packet_10a24fa_v1.zip`, `BOOT-001_CLOSEOUT_INDEPENDENT_REVIEW_10a24fa.md`, `BOOT-001_CLOSEOUT_REVIEW_COVERAGE_10a24fa.csv`.
-- Current focused correction: D04 changes only `coding/records/DOCUMENTATION_REGISTER.csv`, `coding/records/PROJECT_STATE.md` and `coding/records/SESSION_HANDOFF.md`. The actual D04 successor commit remains UNSET until created and verified.
+MP Singh authorized activation and bounded **local** CP-001 implementation from that exact base using the Human Git route and local branch `task/CP-001`. The exact 27-path allowlist is in `coding/tasks/CP-001.md`. The authorization permits isolated local dependency/test work and local candidate commits only.
 
-The tracked preparation snapshots in project state, ledger, review/evidence indexes and this handoff were stale after the real merge. This closeout reconciles those records while preserving the tested merge SHA separately from the bookkeeping commit. It does not amend the accepted candidate or rerun any historical operation.
+It does **not** permit push/remote-branch creation, PR creation/update, GitHub Actions publication/dispatch, merge/auto-merge, repository settings/protection/ruleset changes, retained branch deletion, server use, Drupal deployment, production credentials, release publication/signing or allowlist expansion.
 
-The known GitHub administration limitation is retained: `main` is observable as protected, but the detailed protection endpoint returns 403 because the managed connector does not have Administration read access. Owner-side saved-control observations therefore remain necessary when detailed protection settings matter. No permission expansion or settings change is part of this closeout.
+CPD-12 remains the independent review route: fresh Work / ChatGPT 6 Astra while available, approved fallback ordinary-chat 5.6 sol under the recorded workflow. Human integration authority remains separate.
 
-Independent source-backup custody remains unverified.
+## Candidate design boundary
 
-## Next action
+- Development distribution `actools-drupal`, version `0.1.0.dev0`; Python package `actools`; zero runtime dependencies.
+- Only `actools version [--format human|json]`, help and honest unsupported-command errors are implemented. No future operation stubs.
+- Source CI path `.github/workflows/source-ci.yml`; PR-to-main and push-main only; `contents: read`; GitHub-hosted Ubuntu 24.04; CPython 3.14.7; immutable action SHAs; no release/deployment authority.
+- Canonical check: `python tools/check_source.py` after installing `requirements/ci.lock` with hash checking.
+- Exact tool and lock-generation contract are recorded in the task card, ADR and development guide.
 
-Complete and verify the focused D04 correction, then obtain a focused independent review of the three changed records. If accepted, publish the resulting exact closeout candidate on `records/BOOT-001-closeout` and integrate it through the normal protected PR route under separate human authority. The closeout's own eventual merge SHA need not be embedded in these files; the next session reads current `main`.
+## Evidence boundary and next action
 
-For a fresh session, supply/read at minimum: `coding/records/PROJECT_STATE.md`, `TASK_LEDGER.csv`, `REVIEW_LOG.csv`, `TEST_EVIDENCE_INDEX.csv`, `SESSION_HANDOFF.md`, `BOOT-001_REVIEW_FOLLOWUP.md`, `DOCUMENTATION_REGISTER.csv`, `coding/PACKAGE_CHANGELOG.md`, `coding/tasks/BOOT-001.md`, plus the named D03 closeout review/coverage and the later D04 focused-review outputs.
+The coordinator's isolated environment is Python 3.13.5 and currently has no package-index network path. Source-level checks may be executed there and reported as such, but exact CPython 3.14.7 install/build/audit and pip-tools lock regeneration must remain pending until actually executed. A required scanner error/unavailable result cannot be converted into PASS.
 
-After the closeout is integrated, CP-001 is the next dependency-ready implementation task. Activate it from the **actual current `main` SHA** after refreshing repository identity, controls and task records. CP-001 remains planned until that activation. No BOOT helper, old patch, publication command or PR #1 operation is repeated.
+Pre-candidate results in that environment:
+
+- `python -m pytest -q`: **22 passed**.
+- `python coding/tools/validate_workflow.py`: **OK** (78 workflow-package files, 331 local links, 53 task records).
+- Static `verify_lock()` and `verify_workflow()`: **PASS**.
+- Exploratory wheel build/inventory with available Python 3.13.5/setuptools 82 and explicit `--ignore-requires-python`: **PASS**; wheel contains only `actools/` plus `.dist-info` metadata/licenses. This is not the exact supported build environment.
+- Installed exploratory wheel from outside the source tree: human version and JSON exact; help exposes only `version`; unsupported `install` exits 2.
+- Canonical `python tools/check_source.py`: **FAIL as required** at the exact-Python gate (`3.14.7` required; `3.13.5` running).
+- Isolated `pip install --require-hashes -r requirements/ci.lock`: **nonzero** because package-index artifacts were unavailable in the container; no dependency/audit PASS is claimed.
+
+
+The exact delivered local candidate SHA/tree/parent, complete diff/file manifest and actual test receipt are preserved outside the candidate itself to avoid recursive self-reference; send that exact candidate plus surrounding interfaces to the CPD-12 independent reviewer. Do not publish remotely until a later bounded human decision after review and exact live-base/control refresh.

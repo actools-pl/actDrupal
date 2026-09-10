@@ -30,6 +30,8 @@ EXPECTED_TOOLS = {
 CHECKOUT_SHA = "3d3c42e5aac5ba805825da76410c181273ba90b1"
 SETUP_PYTHON_SHA = "5fda3b95a4ea91299a34e894583c3862153e4b97"
 LOCK = ROOT / "requirements" / "ci.lock"
+LOCK_WHEEL_ONLY = "--only-binary :all:"
+SOURCE_WHEEL_ONLY = "--only-binary=:all:"
 WORKFLOW = ROOT / ".github" / "workflows" / "source-ci.yml"
 DIST_INFO = "actools_drupal-0.1.0.dev0.dist-info"
 EXPECTED_WHEEL_MEMBERS = {
@@ -239,8 +241,9 @@ def verify_environment() -> None:
 def verify_lock() -> None:
     text = LOCK.read_text(encoding="utf-8")
     records = requirement_records(text)
-    if not records or records[0] != "--only-binary=:all:":
-        raise CheckFailure("CI lock must fail closed to wheel-only artifacts")
+    options = [record for record in records if record.startswith("--")]
+    if options != [LOCK_WHEEL_ONLY]:
+        raise CheckFailure("CI lock must contain only the canonical wheel-only artifact directive")
     requirements = [record for record in records if not record.startswith("--")]
     if len(requirements) < 10:
         raise CheckFailure("CI lock dependency closure is unexpectedly small")
@@ -264,6 +267,9 @@ def verify_lock() -> None:
             raise CheckFailure(f"direct source input is absent or changed in lock: {package}=={version}")
 
     source_records = requirement_records((ROOT / "requirements" / "ci.in").read_text(encoding="utf-8"))
+    source_options = [record for record in source_records if record.startswith("--")]
+    if source_options != [SOURCE_WHEEL_ONLY]:
+        raise CheckFailure("requirements/ci.in must contain only the activated wheel-only artifact directive")
     source_requirements = {record for record in source_records if not record.startswith("--")}
     expected_source = {f"{package}=={version}" for package, version in direct.items()}
     if source_requirements != expected_source:
@@ -402,7 +408,7 @@ def run_audit() -> None:
     expected = locked_packages()
     with tempfile.TemporaryDirectory(prefix="actools-audit-") as tmp:
         audit_input = Path(tmp) / "requirements.txt"
-        lines = [line for line in LOCK.read_text(encoding="utf-8").splitlines() if line.strip() != "--only-binary=:all:"]
+        lines = [line for line in LOCK.read_text(encoding="utf-8").splitlines() if line.strip() != LOCK_WHEEL_ONLY]
         audit_input.write_text("\n".join(lines) + "\n", encoding="utf-8")
         audit = run(
             [

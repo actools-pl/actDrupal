@@ -1,6 +1,6 @@
 # ADR-0001 — Minimal Python package and fail-closed source CI
 
-Status: **changes requested; corrected local candidate requires focused CPD-12 re-review and E01 evidence closure**. Date UTC: 2026-09-10. Decision owner: human task owner MP Singh under the bounded CP-001 authorization.
+Status: **blocked on remaining E01 execution; F01-F06 source corrections are independently verified, and the Ubuntu-26.04/resolver-lock correction requires focused CPD-12 review**. Date UTC: 2026-09-10. Decision owner: human task owner MP Singh under the bounded CP-001 authorization.
 
 ## Context
 
@@ -19,7 +19,7 @@ The first independent review, `CP001-IR-40362742-v1`, reviewed candidate `403627
 - The package wheel is a closed owned shape: exactly `actools/__init__.py`, `actools/cli.py` and the expected distribution metadata/license files. Wheel metadata confirms distribution/version/Python range, zero runtime requirements, MIT license, exact console entry point, pure wheel tag and source-equivalent license bytes.
 - Installed acceptance runs the actual absolute `actools` launcher in a fresh venv outside the source tree with Python import overrides removed, verifies import origin and installed metadata, and binds checks to the exact wheel digest.
 - `pip-audit==2.10.1` JSON is bound to its pinned `v2.10.1` formatter envelope (`dependencies` and `fixes`). PASS requires exact complete package/version coverage of the lock, no skips/duplicates/extras/mismatches and explicit empty vulnerability lists. Any incomplete/unknown/unavailable/vulnerable state fails closed.
-- Direct source tools remain setuptools 84.0.0, build 1.6.0, pytest 9.1.1, pip-audit 2.10.1 and pip 26.2.1. Lock generation remains pip-tools 7.6.1 under CPython 3.14.7. A branch-protection required-check change is not part of CP-001.
+- Direct source tools remain setuptools 84.0.0, build 1.6.0, pytest 9.1.1, pip-audit 2.10.1 and pip 26.2.1. Lock generation uses pip-tools 7.6.1 under CPython 3.14.7 on Ubuntu 26.04.1 x86_64. E01 Phase 1C generated the committed 34-distribution lock from the unchanged direct-input file with clean pip configuration and explicit PyPI resolution; the generated lock SHA-256 is `6836c3ed72a3667e97b6901f9836f6c0957dd3512911b221986bc7c1b223e7e7`. A branch-protection required-check change is not part of CP-001.
 
 ## Alternatives and reasons
 
@@ -37,6 +37,6 @@ The first independent review, `CP001-IR-40362742-v1`, reviewed candidate `403627
 
 CP-002 remains blocked until CP-001 acceptance. The provisional JSON version payload is not the later full §18.5 result envelope; downstream compatibility transition belongs to the first consuming schema task.
 
-The coordinator environment can run focused source tests on Python 3.13.5, but that is not E01. Before acceptance/publication, regenerate/compare the lock under CPython 3.14.7 + pip-tools 7.6.1, install it with hashes, confirm exact tool versions and consistency, run the corrected canonical checker including real pip-audit output and wheel/launcher checks, and preserve exact digests. The real GitHub-hosted workflow run requires a later separately authorised publication/PR step and is not implied here.
+The coordinator environment can run focused source tests on Python 3.13.5, but that is not E01. E01 Phase 1C has now completed resolver-backed lock regeneration/comparison under CPython 3.14.7 + pip 26.2.1 + pip-tools 7.6.1 on Ubuntu 26.04.1 x86_64. Before acceptance/publication, install the exact committed lock with hash enforcement, confirm exact tool versions and dependency consistency, run the corrected canonical checker including real pip-audit output and wheel/launcher checks, and preserve exact digests. The real GitHub-hosted workflow run requires a later separately authorised publication/PR step and is not implied here.
 
 Task: `coding/tasks/CP-001.md`. Review route: CPD-12. G01/G09/G22 and UX anchors remain requirement references, not passed product gates.

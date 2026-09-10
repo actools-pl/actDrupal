@@ -17,7 +17,7 @@ python tools/check_source.py
 
 On Windows, activate the environment using its `Scripts` directory; the current CI lock is deliberately bound to the Ubuntu x86_64 runner, so use an equivalent Ubuntu/WSL environment for exact source-CI reproduction rather than weakening hashes.
 
-Direct source inputs are in `requirements/ci.in`. The lock-generation contract is `pip-tools==7.6.1`; regenerate and compare the lock under CPython 3.14.7 before changing any pinned dependency. The current lock's provenance and limitation are stated in the lock itself.
+Direct source inputs are in `requirements/ci.in`. The committed lock was generated from those exact bytes with CPython 3.14.7, pip 26.2.1 and `pip-tools==7.6.1` on the Ubuntu 26.04.1 x86_64 E01 host. Regenerate and compare under that contract before changing any pinned dependency. The lock header records the truthful generation command; the external E01 receipt binds the OS/interpreter/tool versions, input/output digests and semantic comparison.
 
 ## What the canonical check establishes
 

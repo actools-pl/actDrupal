@@ -28,7 +28,7 @@ def test_project_declares_zero_runtime_dependencies() -> None:
 
 def test_lock_records_are_pinned_and_hashed() -> None:
     records = requirement_records((ROOT / "requirements" / "ci.lock").read_text(encoding="utf-8"))
-    assert records[0] == "--only-binary=:all:"
+    assert records[0] == "--only-binary :all:"
     packages = [record for record in records[1:] if not record.startswith("--")]
     assert packages
     assert all("==" in record and "--hash=sha256:" in record for record in packages)

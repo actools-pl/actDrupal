@@ -4,7 +4,7 @@ This project is built as small, reviewed slices. Start with `AGENTS.md`, `coding
 
 ## CP-001 development environment
 
-The reproducible source-CI target is **CPython 3.14.7 on Ubuntu 24.04 x86_64**. The product's later installed platform qualification is a separate concern and is not established by source CI.
+The reproducible source-CI target is **CPython 3.14.7 on Ubuntu 26.04 LTS x86_64**. Local E01 qualification uses Ubuntu Server 26.04.1 LTS; hosted source CI uses GitHub's `ubuntu-26.04` x64 runner label. This aligns source checks with architecture D01, but source CI alone does not qualify the installed host or full product stack.
 
 Create an isolated environment with CPython 3.14.7, then install the hash-locked source tools:
 

@@ -1,6 +1,6 @@
 # Project state
 
-**Record prepared:** 2026-09-10 after CPD-12 review. **Package:** 1.3. **Architecture:** 1.5.1. **State:** BOOT-000/BOOT-001 including records-only closeout are complete; CP-001 is `changes_requested` after independent review `CP001-IR-40362742-v1` and is active only for bounded local correction under the existing Human Git authorization. No CP-001 remote branch, PR, workflow run, merge or server operation is authorized or recorded.
+**Record prepared:** 2026-09-10 after CPD-12 re-review and D01 platform reconciliation. **Package:** 1.3. **Architecture:** 1.5.1. **State:** BOOT-000/BOOT-001 including records-only closeout are complete; CP-001 remains blocked on E01 after `CP001-IR-1bdb6b09-v1`, with F01-F06 source corrections verified. MP Singh has authorized the bounded E01 sequence on a disposable Ubuntu 26.04.1 test server. No CP-001 remote branch, PR, hosted workflow run or merge is authorized or recorded.
 
 | Field | Value |
 |---|---|
@@ -12,14 +12,14 @@
 | BOOT-001 records closeout | Accepted closeout branch head `8e378d88bf663a16c685f788bca0d26bb6483a51`; PR #2 merge/current base `dce4e44b13ab19c65d8e9b67243bfeb72a15cdb2`; integrated tree `e189ff949ba8ff79de2302d5e8150ef8838077e3` |
 | Retained branches at activation | `task/BOOT-001` at `7c5289bd0c7cfc6b0ac08bbdfad73e4b1b349ff1`; `records/BOOT-001-closeout` at `8e378d88bf663a16c685f788bca0d26bb6483a51` |
 | GitHub controls/automation | `main` observable as protected; detailed protection GET remains 403 to managed connector; rulesets observed empty; no existing source workflow/status context at base; absence is not green CI |
-| CP-001 authorization | MP Singh, 2026-09-10: local branch/candidate work only within the exact 27-path allowlist; isolated dependencies/tests allowed; no remote publication/PR/Actions/merge/settings/server authority |
+| CP-001 authorization | MP Singh, 2026-09-10: local branch/candidate work within the exact 27-path allowlist plus the later explicitly authorized bounded E01 execution on a disposable Ubuntu 26.04.1 test server; no remote publication/PR/Actions/merge/settings/deployment/production authority |
 | CP-001 local branch / route | `task/CP-001` / Human Git. Remote branch was absent at final pre-write readback. |
 | CP-001 implemented intent | Minimal `actools-drupal` development package, zero runtime dependencies, truthful version/help only, bounded source CI and source documentation |
-| CP-001 candidate / review / merge | Reviewed candidate `4036274201658873f8324f06224adc8f6985eeff` / tree `cfd01ec750cdf798d187a5d635653cfc5f1a9194`; `CP001-IR-40362742-v1` = CHANGES REQUESTED with F01-F06 and E01; corrected candidate pending external post-commit binding; merge UNSET |
-| Exact source-CI target | GitHub-hosted `ubuntu-24.04` x86_64, CPython 3.14.7; source workflow not yet published or run |
-| Coordinator execution limitation | Current isolated coordinator container is Python 3.13.5 and cannot resolve the package index; exact 3.14.7 dependency install/build/audit and pip-tools lock regeneration are pending, not inferred |
+| CP-001 candidate / review / merge | Candidate `4036274201658873f8324f06224adc8f6985eeff` = CHANGES REQUESTED. Correction candidate `1bdb6b09ddff16220dc5e414254788ba259e1d15` / tree `13e07bcc266d76adf218e2314853d67771b67b9d`; `CP001-IR-1bdb6b09-v1` verifies F01-F06 source corrections and leaves E01 open. Ubuntu-26.04 platform-alignment candidate pending external post-commit binding; merge UNSET |
+| Exact source-CI target | Architecture-aligned Ubuntu 26.04 LTS x86_64 / CPython 3.14.7. Local E01 reference host: Ubuntu Server 26.04.1 LTS. Hosted CI: GitHub `ubuntu-26.04` x64, public preview at correction time; workflow not yet published or run |
+| Coordinator execution limitation | Coordinator container remains Python 3.13.5 without package-index resolution. Operator-provided disposable E01 host is Ubuntu 26.04.1 LTS x86_64 with uv-managed CPython 3.14.7; exact lock regeneration/install/build/audit evidence is pending actual execution there, not inferred |
 | Local evidence chronology | Initial 40362742 receipt: 22 tests and exploratory checks, later invalidated in the affected F01-F06 assurance areas by independent review. Correction work on available Python 3.13.5: focused CLI/scanner/package/workflow tests = 66 passed; exploratory corrected wheel built with `--ignore-requires-python` and had the expected nine-member shape, but the strengthened verifier correctly rejected it because setuptools 84.0.0 was not available; exploratory installed console launcher/version/help/error/import-origin checks passed with explicit Python-3.13 qualification. E01 exact 3.14.7 lock/install/build/audit remains open. |
-| Product/server qualification | NOT_RUN; CP-001 does not qualify Drupal, host security, restore, release signing or production behavior |
+| Product/server qualification | NOT_RUN. The authorized disposable Ubuntu 26.04.1 E01 host is only a source/dependency test environment; CP-001 does not qualify Drupal, host hardening, restore, release signing or production behavior |
 | Evidence custody | BOOT final evidence supplied in the next-window handoff; independent source-backup custody remains unverified |
 
 ## BOOT-001 retained evidence anchors

@@ -128,9 +128,9 @@ def test_exact_approved_workflow_passes() -> None:
     "mutated",
     [
         EXPECTED_WORKFLOW.replace("    name: source\n", "    name: source\n    permissions: write-all\n", 1),
-        EXPECTED_WORKFLOW.replace("    runs-on: ubuntu-24.04\n", "    continue-on-error: true\n    runs-on: ubuntu-24.04\n", 1),
+        EXPECTED_WORKFLOW.replace("    runs-on: ubuntu-26.04\n", "    continue-on-error: true\n    runs-on: ubuntu-26.04\n", 1),
         EXPECTED_WORKFLOW.replace("    branches: [main]\n\npermissions:", '    branches: [main]\n    tags: ["*"]\n\npermissions:', 1),
-        EXPECTED_WORKFLOW.replace("runs-on: ubuntu-24.04", "runs-on: self-hosted"),
+        EXPECTED_WORKFLOW.replace("runs-on: ubuntu-26.04", "runs-on: self-hosted"),
         EXPECTED_WORKFLOW.replace("persist-credentials: false", "persist-credentials: true"),
         EXPECTED_WORKFLOW.replace("actions/checkout@", "actions/checkout@0000000000000000000000000000000000000000 # replaced\n        # original "),
         EXPECTED_WORKFLOW.replace("python tools/check_source.py", "python tools/check_source.py || true"),

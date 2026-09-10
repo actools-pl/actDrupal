@@ -1,5 +1,5 @@
 # CP-001 source-CI lock
-# Target: CPython 3.14.7, ubuntu-24.04, x86_64
+# Target: CPython 3.14.7, Ubuntu 26.04 LTS, x86_64 (local E01 reference: 26.04.1 LTS)
 # Direct inputs: requirements/ci.in
 # Lock-generation tool contract: pip-tools==7.6.1
 # Candidate provenance: exact versions and wheel SHA-256 values were assembled

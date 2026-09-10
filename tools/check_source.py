@@ -57,7 +57,7 @@ permissions:
 jobs:
   source:
     name: source
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - name: Checkout

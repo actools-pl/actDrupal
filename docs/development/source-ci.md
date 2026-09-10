@@ -2,7 +2,7 @@
 
 ## Supported check environment
 
-The exact source-CI evidence environment is GitHub-hosted `ubuntu-24.04` x86_64 with CPython **3.14.7**. This is a source-check environment only; it does not change the later Ubuntu production target or qualify a host.
+The source-check OS line is **Ubuntu 26.04 LTS x86_64** with CPython **3.14.7**, matching architecture D01. Local E01 qualification uses a clean Ubuntu Server **26.04.1 LTS** x86_64 host. Hosted source CI uses GitHub-hosted `ubuntu-26.04` x64; that hosted label is public preview at this correction point, so capture its actual runner image/version in the later CI evidence. Source-CI success does not by itself qualify host hardening or the complete installed product.
 
 Install the reviewed hash lock and invoke the canonical checker:
 
@@ -23,7 +23,7 @@ Lock-generation contract: use CPython 3.14.7 and `pip-tools==7.6.1` in a disposa
 
 1. Exact Python and direct source-tool versions are present.
 2. Every locked requirement is exact and hashed, the direct input set is unchanged, and wheel-only policy is present.
-3. The source workflow matches the complete approved CP-001 workflow shape: only pull requests to `main` and pushes to `main`, repository `contents: read`, GitHub-hosted `ubuntu-24.04`, CPython 3.14.7, immutable checkout/setup-python pins, non-persisted checkout credentials, the exact locked-install step and the canonical check step. Extra triggers, job-level authority, ignored failures, runner changes or extra execution are rejected.
+3. The source workflow matches the complete approved CP-001 workflow shape: only pull requests to `main` and pushes to `main`, repository `contents: read`, GitHub-hosted `ubuntu-26.04`, CPython 3.14.7, immutable checkout/setup-python pins, non-persisted checkout credentials, the exact locked-install step and the canonical check step. Extra triggers, job-level authority, ignored failures, runner changes or extra execution are rejected.
 4. Unit tests cover exact human/JSON version output and help, architecture exit code **3** for invalid invocation/report failures, bounded non-reflective error text, closed stdin, secret canaries, write/flush failures and real closed pipes in buffered and unbuffered Python.
 5. Controlled failure fixtures must fail for their intended reason: the deliberate marker and the intentionally missing build backend are checked, so a missing test tool cannot masquerade as a successful negative test.
 6. A wheel is built and must have the closed nine-member CP-001 inventory: the two owned runtime Python files plus only the expected `actools_drupal-0.1.0.dev0.dist-info` metadata/license files. Duplicate, malformed, traversal, nested test/Git/credential material and unrelated metadata roots are rejected. Distribution identity, Python range, zero runtime requirements, MIT license, console entry point, pure-wheel metadata and packaged license bytes are checked.

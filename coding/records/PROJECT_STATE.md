@@ -1,6 +1,6 @@
 # Project state
 
-**Record prepared:** 2026-09-10T08:16:34Z. **Package:** 1.3. **Architecture:** 1.5.1. **State:** BOOT-000/BOOT-001 including records-only closeout are complete; CP-001 is active only for bounded local candidate preparation under the Human Git route; no CP-001 remote branch, PR, workflow run, merge or server operation is authorized or recorded.
+**Record prepared:** 2026-09-10 after CPD-12 review. **Package:** 1.3. **Architecture:** 1.5.1. **State:** BOOT-000/BOOT-001 including records-only closeout are complete; CP-001 is `changes_requested` after independent review `CP001-IR-40362742-v1` and is active only for bounded local correction under the existing Human Git authorization. No CP-001 remote branch, PR, workflow run, merge or server operation is authorized or recorded.
 
 | Field | Value |
 |---|---|
@@ -15,10 +15,10 @@
 | CP-001 authorization | MP Singh, 2026-09-10: local branch/candidate work only within the exact 27-path allowlist; isolated dependencies/tests allowed; no remote publication/PR/Actions/merge/settings/server authority |
 | CP-001 local branch / route | `task/CP-001` / Human Git. Remote branch was absent at final pre-write readback. |
 | CP-001 implemented intent | Minimal `actools-drupal` development package, zero runtime dependencies, truthful version/help only, bounded source CI and source documentation |
-| CP-001 candidate / review / merge | Exact local candidate SHA/tree are bound by the external post-commit delivery manifest/test receipt; CPD-12 review pending; merge UNSET |
+| CP-001 candidate / review / merge | Reviewed candidate `4036274201658873f8324f06224adc8f6985eeff` / tree `cfd01ec750cdf798d187a5d635653cfc5f1a9194`; `CP001-IR-40362742-v1` = CHANGES REQUESTED with F01-F06 and E01; corrected candidate pending external post-commit binding; merge UNSET |
 | Exact source-CI target | GitHub-hosted `ubuntu-24.04` x86_64, CPython 3.14.7; source workflow not yet published or run |
 | Coordinator execution limitation | Current isolated coordinator container is Python 3.13.5 and cannot resolve the package index; exact 3.14.7 dependency install/build/audit and pip-tools lock regeneration are pending, not inferred |
-| Pre-candidate local evidence | On the coordinator container: `python -m pytest -q` = 22 passed; `python coding/tools/validate_workflow.py` = OK; static lock/workflow checks = PASS; exploratory wheel build/inventory = PASS using available Python 3.13.5/setuptools 82 with `--ignore-requires-python`; canonical `python tools/check_source.py` = expected FAIL at exact-Python gate; isolated locked install attempt = nonzero because package-index artifacts were unavailable |
+| Local evidence chronology | Initial 40362742 receipt: 22 tests and exploratory checks, later invalidated in the affected F01-F06 assurance areas by independent review. Correction work on available Python 3.13.5: focused CLI/scanner/package/workflow tests = 66 passed; exploratory corrected wheel built with `--ignore-requires-python` and had the expected nine-member shape, but the strengthened verifier correctly rejected it because setuptools 84.0.0 was not available; exploratory installed console launcher/version/help/error/import-origin checks passed with explicit Python-3.13 qualification. E01 exact 3.14.7 lock/install/build/audit remains open. |
 | Product/server qualification | NOT_RUN; CP-001 does not qualify Drupal, host security, restore, release signing or production behavior |
 | Evidence custody | BOOT final evidence supplied in the next-window handoff; independent source-backup custody remains unverified |
 

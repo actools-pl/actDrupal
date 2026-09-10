@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-import argparse
+import hashlib
 import importlib.metadata
 import json
 import os
@@ -14,8 +14,9 @@ import tempfile
 import venv
 import zipfile
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Iterable
+from email.parser import BytesParser
+from pathlib import Path, PurePosixPath
+from typing import Mapping
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_PYTHON = (3, 14, 7)
@@ -30,6 +31,53 @@ CHECKOUT_SHA = "3d3c42e5aac5ba805825da76410c181273ba90b1"
 SETUP_PYTHON_SHA = "5fda3b95a4ea91299a34e894583c3862153e4b97"
 LOCK = ROOT / "requirements" / "ci.lock"
 WORKFLOW = ROOT / ".github" / "workflows" / "source-ci.yml"
+DIST_INFO = "actools_drupal-0.1.0.dev0.dist-info"
+EXPECTED_WHEEL_MEMBERS = {
+    "actools/__init__.py",
+    "actools/cli.py",
+    f"{DIST_INFO}/licenses/LICENSE",
+    f"{DIST_INFO}/licenses/NOTICE.md",
+    f"{DIST_INFO}/METADATA",
+    f"{DIST_INFO}/WHEEL",
+    f"{DIST_INFO}/entry_points.txt",
+    f"{DIST_INFO}/top_level.txt",
+    f"{DIST_INFO}/RECORD",
+}
+EXPECTED_WORKFLOW = f'''name: Source CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    name: source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@{CHECKOUT_SHA} # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@{SETUP_PYTHON_SHA} # v7.0.0
+        with:
+          python-version: "3.14.7"
+
+      - name: Install locked source-check tools
+        run: python -m pip install --require-hashes -r requirements/ci.lock
+
+      - name: Run canonical source checks
+        env:
+          PYTHONUTF8: "1"
+        run: python tools/check_source.py
+'''
 
 
 class CheckFailure(RuntimeError):
@@ -66,42 +114,8 @@ def run(command: list[str], *, cwd: Path = ROOT, check: bool = True, **kwargs) -
     return proc
 
 
-def classify_scanner_result(*, executed: bool, returncode: int | None, payload: str) -> ScannerResult:
-    """Fail closed: only a successful, valid, vulnerability-free scan can pass."""
-    if not executed:
-        return ScannerResult("UNAVAILABLE", False, "scanner did not execute")
-    if returncode is None:
-        return ScannerResult("ERROR", False, "scanner return code is unknown")
-    if returncode != 0:
-        return ScannerResult("VULNERABLE" if returncode == 1 else "ERROR", False, f"scanner exit {returncode}")
-    try:
-        parsed = json.loads(payload)
-    except json.JSONDecodeError as exc:
-        return ScannerResult("ERROR", False, f"invalid scanner JSON: {exc}")
-    if not isinstance(parsed, list):
-        return ScannerResult("ERROR", False, "scanner JSON must be a dependency list")
-    for dependency in parsed:
-        if not isinstance(dependency, dict) or not isinstance(dependency.get("vulns", []), list):
-            return ScannerResult("ERROR", False, "scanner JSON dependency shape is invalid")
-        if dependency.get("vulns"):
-            return ScannerResult("VULNERABLE", False, "scanner reported one or more vulnerabilities")
-    return ScannerResult("PASS", True, "valid scan reported no known vulnerabilities")
-
-
-def verify_environment() -> None:
-    actual = sys.version_info[:3]
-    if actual != EXPECTED_PYTHON:
-        raise CheckFailure(f"CPython {EXPECTED_PYTHON!s} required; running {actual!s}")
-    mismatches: list[str] = []
-    for distribution, expected in EXPECTED_TOOLS.items():
-        try:
-            actual_version = importlib.metadata.version(distribution)
-        except importlib.metadata.PackageNotFoundError:
-            actual_version = "MISSING"
-        if actual_version != expected:
-            mismatches.append(f"{distribution}={actual_version} (expected {expected})")
-    if mismatches:
-        raise CheckFailure("tool version mismatch: " + "; ".join(mismatches))
+def _canonical_name(name: str) -> str:
+    return re.sub(r"[-_.]+", "-", name).lower()
 
 
 def requirement_records(text: str) -> list[str]:
@@ -123,6 +137,103 @@ def requirement_records(text: str) -> list[str]:
     if current:
         logical.append(current)
     return logical
+
+
+def locked_packages() -> dict[str, str]:
+    expected: dict[str, str] = {}
+    records = requirement_records(LOCK.read_text(encoding="utf-8"))
+    for record in records:
+        if record.startswith("--"):
+            continue
+        match = re.match(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]+\])?==([^\s]+)(?:\s|$)", record)
+        if not match:
+            raise CheckFailure(f"cannot parse locked distribution identity: {record}")
+        name = _canonical_name(match.group(1))
+        version = match.group(2)
+        if name in expected:
+            raise CheckFailure(f"duplicate distribution in CI lock: {name}")
+        expected[name] = version
+    if not expected:
+        raise CheckFailure("CI lock contains no distributions")
+    return expected
+
+
+def classify_scanner_result(
+    *,
+    executed: bool,
+    returncode: int | None,
+    payload: str,
+    expected_packages: Mapping[str, str],
+) -> ScannerResult:
+    """Fail closed unless pinned pip-audit reports complete clean coverage."""
+    if not executed:
+        return ScannerResult("UNAVAILABLE", False, "scanner did not execute")
+    if returncode is None:
+        return ScannerResult("ERROR", False, "scanner return code is unknown")
+    if returncode != 0:
+        return ScannerResult("VULNERABLE" if returncode == 1 else "ERROR", False, f"scanner exit {returncode}")
+    try:
+        parsed = json.loads(payload)
+    except json.JSONDecodeError as exc:
+        return ScannerResult("ERROR", False, f"invalid scanner JSON: {exc}")
+
+    # pip-audit 2.10.1 JsonFormat emits exactly this manifest envelope.
+    if not isinstance(parsed, dict) or set(parsed) != {"dependencies", "fixes"}:
+        return ScannerResult("ERROR", False, "scanner JSON envelope is invalid")
+    dependencies = parsed.get("dependencies")
+    fixes = parsed.get("fixes")
+    if not isinstance(dependencies, list) or not isinstance(fixes, list) or fixes:
+        return ScannerResult("ERROR", False, "scanner JSON manifest fields are invalid")
+    if not dependencies:
+        return ScannerResult("ERROR", False, "scanner reported empty dependency coverage")
+
+    observed: dict[str, str] = {}
+    for dependency in dependencies:
+        if not isinstance(dependency, dict):
+            return ScannerResult("ERROR", False, "scanner dependency record is not an object")
+        if "skip_reason" in dependency:
+            return ScannerResult("ERROR", False, "scanner skipped one or more dependencies")
+        if set(dependency) != {"name", "version", "vulns"}:
+            return ScannerResult("ERROR", False, "scanner dependency record has missing or unexpected fields")
+        name = dependency.get("name")
+        version = dependency.get("version")
+        vulns = dependency.get("vulns")
+        if not isinstance(name, str) or not name.strip() or not isinstance(version, str) or not version.strip():
+            return ScannerResult("ERROR", False, "scanner dependency identity is invalid")
+        if not isinstance(vulns, list):
+            return ScannerResult("ERROR", False, "scanner vulnerability field is invalid")
+        canonical = _canonical_name(name)
+        if canonical in observed:
+            return ScannerResult("ERROR", False, f"scanner duplicated dependency: {canonical}")
+        observed[canonical] = version
+        if vulns:
+            return ScannerResult("VULNERABLE", False, f"scanner reported vulnerability for {canonical}")
+
+    expected = {_canonical_name(name): version for name, version in expected_packages.items()}
+    if observed != expected:
+        missing = sorted(set(expected) - set(observed))
+        unexpected = sorted(set(observed) - set(expected))
+        mismatched = sorted(name for name in set(expected) & set(observed) if expected[name] != observed[name])
+        detail = f"scanner coverage mismatch: missing={missing}; unexpected={unexpected}; version_mismatch={mismatched}"
+        return ScannerResult("ERROR", False, detail)
+
+    return ScannerResult("PASS", True, f"complete clean coverage for {len(expected)} locked distributions")
+
+
+def verify_environment() -> None:
+    actual = sys.version_info[:3]
+    if actual != EXPECTED_PYTHON:
+        raise CheckFailure(f"CPython {EXPECTED_PYTHON!s} required; running {actual!s}")
+    mismatches: list[str] = []
+    for distribution, expected in EXPECTED_TOOLS.items():
+        try:
+            actual_version = importlib.metadata.version(distribution)
+        except importlib.metadata.PackageNotFoundError:
+            actual_version = "MISSING"
+        if actual_version != expected:
+            mismatches.append(f"{distribution}={actual_version} (expected {expected})")
+    if mismatches:
+        raise CheckFailure("tool version mismatch: " + "; ".join(mismatches))
 
 
 def verify_lock() -> None:
@@ -147,9 +258,9 @@ def verify_lock() -> None:
         "pytest": "9.1.1",
         "setuptools": "84.0.0",
     }
+    packages = locked_packages()
     for package, version in direct.items():
-        prefix = f"{package}=={version} "
-        if not any(record.lower().startswith(prefix) for record in requirements):
+        if packages.get(package) != version:
             raise CheckFailure(f"direct source input is absent or changed in lock: {package}=={version}")
 
     source_records = requirement_records((ROOT / "requirements" / "ci.in").read_text(encoding="utf-8"))
@@ -159,106 +270,136 @@ def verify_lock() -> None:
         raise CheckFailure("requirements/ci.in does not exactly match the activated direct source-tool contract")
 
 
+def verify_workflow_text(text: str) -> None:
+    normalised = text.replace("\r\n", "\n")
+    if normalised != EXPECTED_WORKFLOW:
+        raise CheckFailure("source CI workflow differs from the exact approved CP-001 structure")
+
+
 def verify_workflow() -> None:
-    text = WORKFLOW.read_text(encoding="utf-8")
-    required = [
-        "pull_request:",
-        "push:",
-        "permissions:\n  contents: read",
-        "runs-on: ubuntu-24.04",
-        'python-version: "3.14.7"',
-        f"actions/checkout@{CHECKOUT_SHA}",
-        f"actions/setup-python@{SETUP_PYTHON_SHA}",
-        "persist-credentials: false",
-        "python -m pip install --require-hashes -r requirements/ci.lock",
-        "python tools/check_source.py",
-    ]
-    missing = [needle for needle in required if needle not in text]
-    if missing:
-        raise CheckFailure("workflow missing required controls: " + ", ".join(missing))
-    forbidden = [
-        "pull_request_target",
-        "workflow_dispatch",
-        "schedule:",
-        "self-hosted",
-        "secrets.",
-        "id-token:",
-        "contents: write",
-        "actions: write",
-        "packages: write",
-        "deployments: write",
-    ]
-    present = [needle for needle in forbidden if needle in text]
-    if present:
-        raise CheckFailure("workflow contains forbidden authority/trigger: " + ", ".join(present))
+    verify_workflow_text(WORKFLOW.read_text(encoding="utf-8"))
 
 
-def verify_wheel_inventory(wheel: Path) -> None:
-    forbidden_fragments = (
-        ".git",
-        "coding/",
-        "tests/",
-        "tools/",
-        "fixtures/",
-        ".env",
-        "credential",
-        "secret",
-        "experiment",
-        "seed",
-    )
+def _safe_wheel_member(name: str) -> None:
+    if not name or "\\" in name or name.startswith("/") or name.endswith("/"):
+        raise CheckFailure(f"ambiguous wheel member path: {name!r}")
+    parts = PurePosixPath(name).parts
+    if not parts or any(part in {"", ".", ".."} for part in parts):
+        raise CheckFailure(f"unsafe wheel member path: {name!r}")
+
+
+def verify_wheel_inventory(wheel: Path) -> str:
     with zipfile.ZipFile(wheel) as archive:
         names = archive.namelist()
-        if not names:
-            raise CheckFailure("built wheel is empty")
+        if len(names) != len(set(names)):
+            raise CheckFailure("wheel contains duplicate archive member names")
         for name in names:
-            lowered = name.lower()
-            blocked_prefixes = (".git/", "coding/", "tests/", "tools/", "fixtures/")
-            blocked_names = (".env", "credentials", "credentials.json", "secrets", "secrets.json")
-            if lowered.startswith(blocked_prefixes) or Path(lowered).name in blocked_names:
-                raise CheckFailure(f"forbidden wheel member: {name}")
-            if any(fragment in Path(lowered).name for fragment in ("credential", "secret", "experiment", "seed")):
-                raise CheckFailure(f"forbidden wheel member: {name}")
-            if not (name.startswith("actools/") or ".dist-info/" in name):
-                raise CheckFailure(f"unexpected wheel member: {name}")
-        required = {"actools/__init__.py", "actools/cli.py"}
-        if not required.issubset(names):
-            raise CheckFailure("wheel does not contain the complete minimal actools package")
+            _safe_wheel_member(name)
+        actual = set(names)
+        if actual != EXPECTED_WHEEL_MEMBERS:
+            missing = sorted(EXPECTED_WHEEL_MEMBERS - actual)
+            unexpected = sorted(actual - EXPECTED_WHEEL_MEMBERS)
+            raise CheckFailure(f"wheel inventory mismatch: missing={missing}; unexpected={unexpected}")
+
+        metadata = BytesParser().parsebytes(archive.read(f"{DIST_INFO}/METADATA"))
+        if metadata.get("Name") != "actools-drupal" or metadata.get("Version") != "0.1.0.dev0":
+            raise CheckFailure("wheel distribution identity/version is incorrect")
+        if metadata.get("Requires-Python") not in {">=3.14,<3.15", "<3.15,>=3.14"}:
+            raise CheckFailure("wheel Requires-Python metadata is incorrect")
+        if metadata.get_all("Requires-Dist"):
+            raise CheckFailure("wheel unexpectedly declares runtime dependencies")
+        if metadata.get("License-Expression") != "MIT":
+            raise CheckFailure("wheel license expression is not MIT")
+
+        entry_points = archive.read(f"{DIST_INFO}/entry_points.txt").decode("utf-8")
+        if entry_points != "[console_scripts]\nactools = actools.cli:main\n":
+            raise CheckFailure("wheel console-script entry point is not exact")
+        if archive.read(f"{DIST_INFO}/top_level.txt").decode("utf-8") != "actools\n":
+            raise CheckFailure("wheel top-level package metadata is not exact")
+
+        wheel_meta = BytesParser().parsebytes(archive.read(f"{DIST_INFO}/WHEEL"))
+        if wheel_meta.get("Root-Is-Purelib") != "true" or wheel_meta.get("Tag") != "py3-none-any":
+            raise CheckFailure("wheel platform/purelib metadata is unexpected")
+        if wheel_meta.get("Generator") != "setuptools (84.0.0)":
+            raise CheckFailure("wheel was not generated by the activated setuptools version")
+
+        for leaf in ("LICENSE", "NOTICE.md"):
+            packaged = archive.read(f"{DIST_INFO}/licenses/{leaf}")
+            if packaged != (ROOT / leaf).read_bytes():
+                raise CheckFailure(f"wheel packaged {leaf} differs from repository source")
+
+    return hashlib.sha256(wheel.read_bytes()).hexdigest()
 
 
 def verify_negative_fixtures() -> None:
     deliberate = run([sys.executable, "tests/fixtures/deliberate_failure.py"], check=False)
-    if deliberate.returncode == 0:
-        raise CheckFailure("deliberate failure fixture unexpectedly passed")
+    marker = "CP-001 intentional negative-test fixture"
+    if deliberate.returncode != 1 or marker not in deliberate.stderr:
+        raise CheckFailure("deliberate failure fixture did not fail for its intended marker")
+
     invalid = run(
         [sys.executable, "-m", "build", "--wheel", "--no-isolation", "tests/fixtures/invalid_package"],
         check=False,
     )
-    if invalid.returncode == 0:
-        raise CheckFailure("invalid-package fixture unexpectedly built")
+    backend_marker = "cp001_intentionally_missing_backend"
+    combined = invalid.stdout + "\n" + invalid.stderr
+    if invalid.returncode == 0 or backend_marker not in combined:
+        raise CheckFailure("invalid-package fixture did not fail for the intentionally missing backend")
 
 
-def verify_installed_cli(wheel: Path, directory: Path) -> None:
+def _clean_subprocess_env() -> dict[str, str]:
+    env = {key: value for key, value in os.environ.items() if key not in {"PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV"}}
+    env["PYTHONNOUSERSITE"] = "1"
+    return env
+
+
+def verify_installed_cli(wheel: Path, directory: Path, wheel_sha256: str) -> None:
     env_dir = directory / "installed"
     venv.EnvBuilder(with_pip=True, clear=True).create(env_dir)
     scripts = "Scripts" if os.name == "nt" else "bin"
     python = env_dir / scripts / ("python.exe" if os.name == "nt" else "python")
-    run([str(python), "-m", "pip", "install", "--no-deps", str(wheel)], cwd=directory)
+    launcher = env_dir / scripts / ("actools.exe" if os.name == "nt" else "actools")
+    env = _clean_subprocess_env()
+
+    run([str(python), "-m", "pip", "install", "--no-index", "--no-deps", str(wheel)], cwd=directory, env=env)
+    if not launcher.is_file():
+        raise CheckFailure("installed actools console launcher is missing")
+
     expected = "actools 0.1.0.dev0\n"
-    human = run([str(python), "-m", "actools.cli", "version"], cwd=directory)
+    human = run([str(launcher), "version"], cwd=directory, env=env)
     if human.stdout != expected or human.stderr:
-        raise CheckFailure("installed human version output is not exact/plain")
-    machine = run([str(python), "-m", "actools.cli", "version", "--format", "json"], cwd=directory)
+        raise CheckFailure("installed launcher human version output is not exact/plain")
+    machine = run([str(launcher), "version", "--format", "json"], cwd=directory, env=env)
     if machine.stdout != '{"program":"actools","version":"0.1.0.dev0"}\n' or machine.stderr:
-        raise CheckFailure("installed JSON version output is not exact")
-    help_result = run([str(python), "-m", "actools.cli", "--help"], cwd=directory)
-    if "version" not in help_result.stdout or "install" in help_result.stdout.lower():
-        raise CheckFailure("installed help is missing version or advertises deferred installation")
-    unsupported = run([str(python), "-m", "actools.cli", "install"], cwd=directory, check=False, stdin=subprocess.DEVNULL)
-    if unsupported.returncode == 0 or "invalid choice" not in unsupported.stderr.lower():
-        raise CheckFailure("unsupported invocation did not fail honestly")
+        raise CheckFailure("installed launcher JSON version output is not exact")
+    root_help = run([str(launcher), "--help"], cwd=directory, env=env)
+    version_help = run([str(launcher), "version", "--help"], cwd=directory, env=env)
+    if "version" not in root_help.stdout or "install" in root_help.stdout.lower() or "--format" not in version_help.stdout:
+        raise CheckFailure("installed launcher help surface is incorrect")
+    unsupported = run([str(launcher), "install"], cwd=directory, check=False, stdin=subprocess.DEVNULL, env=env)
+    if unsupported.returncode != 3 or unsupported.stderr != "actools: error: invalid invocation\n":
+        raise CheckFailure("installed launcher unsupported invocation contract is incorrect")
+
+    probe_code = (
+        "import actools, importlib.metadata, json, pathlib; "
+        "m=importlib.metadata.metadata('actools-drupal'); "
+        "print(json.dumps({'module':str(pathlib.Path(actools.__file__).resolve()),"
+        "'version':importlib.metadata.version('actools-drupal'),"
+        "'requires':m.get_all('Requires-Dist') or []}, sort_keys=True))"
+    )
+    probe = run([str(python), "-I", "-c", probe_code], cwd=directory, env=env)
+    info = json.loads(probe.stdout)
+    module_path = Path(info["module"]).resolve()
+    if not module_path.is_relative_to(env_dir.resolve()) or module_path.is_relative_to(ROOT.resolve()):
+        raise CheckFailure("installed import did not originate from the fresh virtual environment")
+    if info["version"] != "0.1.0.dev0" or info["requires"] != []:
+        raise CheckFailure("installed distribution identity/version/runtime dependency metadata is incorrect")
+    if hashlib.sha256(wheel.read_bytes()).hexdigest() != wheel_sha256:
+        raise CheckFailure("wheel changed between inventory and installed-launcher checks")
 
 
 def run_audit() -> None:
+    expected = locked_packages()
     with tempfile.TemporaryDirectory(prefix="actools-audit-") as tmp:
         audit_input = Path(tmp) / "requirements.txt"
         lines = [line for line in LOCK.read_text(encoding="utf-8").splitlines() if line.strip() != "--only-binary=:all:"]
@@ -270,6 +411,7 @@ def run_audit() -> None:
                 "pip_audit",
                 "--strict",
                 "--require-hashes",
+                "--no-deps",
                 "--disable-pip",
                 "--progress-spinner=off",
                 "--timeout=15",
@@ -279,7 +421,12 @@ def run_audit() -> None:
             ],
             check=False,
         )
-    result = classify_scanner_result(executed=True, returncode=audit.returncode, payload=audit.stdout)
+    result = classify_scanner_result(
+        executed=True,
+        returncode=audit.returncode,
+        payload=audit.stdout,
+        expected_packages=expected,
+    )
     if not result.passing:
         raise CheckFailure(
             f"dependency vulnerability check did not pass: {result.status}: {result.detail}\n"
@@ -302,12 +449,13 @@ def main() -> int:
             wheels = list(out.glob("*.whl"))
             if len(wheels) != 1:
                 raise CheckFailure(f"expected one wheel, found {len(wheels)}")
-            verify_wheel_inventory(wheels[0])
-            verify_installed_cli(wheels[0], work)
+            wheel_sha256 = verify_wheel_inventory(wheels[0])
+            verify_installed_cli(wheels[0], work, wheel_sha256)
         run_audit()
-    except (CheckFailure, OSError, subprocess.SubprocessError) as exc:
+    except (CheckFailure, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
         print(f"SOURCE-CI: FAIL: {exc}", file=sys.stderr)
         return 1
+    print(f"SOURCE-CI: WHEEL-SHA256 {wheel_sha256}")
     print("SOURCE-CI: PASS")
     return 0
 

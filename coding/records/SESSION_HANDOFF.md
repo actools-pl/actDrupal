@@ -1,6 +1,6 @@
 # Session handoff
 
-**Prepared:** 2026-09-10T08:16:34Z. **Subject:** CP-001 bounded local candidate preparation after completed BOOT-001 closeout.
+**Prepared:** 2026-09-10 after independent review. **Subject:** CP-001 bounded local correction after `CP001-IR-40362742-v1` CHANGES REQUESTED.
 
 ## Authoritative repository point
 
@@ -17,6 +17,8 @@ MP Singh authorized activation and bounded **local** CP-001 implementation from 
 It does **not** permit push/remote-branch creation, PR creation/update, GitHub Actions publication/dispatch, merge/auto-merge, repository settings/protection/ruleset changes, retained branch deletion, server use, Drupal deployment, production credentials, release publication/signing or allowlist expansion.
 
 CPD-12 remains the independent review route: fresh Work / ChatGPT 6 Astra while available, approved fallback ordinary-chat 5.6 sol under the recorded workflow. Human integration authority remains separate.
+
+Independent review `CP001-IR-40362742-v1` of candidate `4036274201658873f8324f06224adc8f6985eeff` / tree `cfd01ec750cdf798d187a5d635653cfc5f1a9194` returned **CHANGES REQUESTED**. F01-F06 cover scanner completeness/format, CLI error contract/safety, help broken-pipe handling, wheel shape, installed launcher/import origin, and workflow effective-policy assurance. E01 requires exact CPython 3.14.7 lock regeneration/install/canonical build-audit evidence and later separately authorised hosted CI evidence.
 
 ## Candidate design boundary
 
@@ -36,9 +38,18 @@ Pre-candidate results in that environment:
 - `python coding/tools/validate_workflow.py`: **OK** (78 workflow-package files, 331 local links, 53 task records).
 - Static `verify_lock()` and `verify_workflow()`: **PASS**.
 - Exploratory wheel build/inventory with available Python 3.13.5/setuptools 82 and explicit `--ignore-requires-python`: **PASS**; wheel contains only `actools/` plus `.dist-info` metadata/licenses. This is not the exact supported build environment.
-- Installed exploratory wheel from outside the source tree: human version and JSON exact; help exposes only `version`; unsupported `install` exits 2.
+- Initial exploratory installed-wheel evidence from candidate 40362742 is invalidated for F02/F03/F05 and retained only as history. Corrected local source tests now require invalid invocation exit 3, non-reflective bounded diagnostics, real closed-pipe handling and installed console-launcher/import-origin checks.
 - Canonical `python tools/check_source.py`: **FAIL as required** at the exact-Python gate (`3.14.7` required; `3.13.5` running).
 - Isolated `pip install --require-hashes -r requirements/ci.lock`: **nonzero** because package-index artifacts were unavailable in the container; no dependency/audit PASS is claimed.
 
 
 The exact delivered local candidate SHA/tree/parent, complete diff/file manifest and actual test receipt are preserved outside the candidate itself to avoid recursive self-reference; send that exact candidate plus surrounding interfaces to the CPD-12 independent reviewer. Do not publish remotely until a later bounded human decision after review and exact live-base/control refresh.
+
+## Correction status after CP001-IR-40362742-v1
+
+- Corrections remain within the original 27-path allowlist; `REVIEW_LOG.csv` and `TEST_EVIDENCE_INDEX.csv` are intentionally untouched.
+- Focused corrected tests on the available Python 3.13.5: **66 passed** (26 CLI; 40 scanner/package/workflow). These are not E01 qualification.
+- Corrected exploratory wheel build succeeded with `--ignore-requires-python` and produced only the nine approved members. The strengthened inventory check then correctly refused qualification because the available setuptools is not 84.0.0.
+- Corrected exploratory wheel installation used the actual `actools` console launcher outside the source tree; version/JSON/help and exit-3 invalid invocation behaved as intended, and an isolated import probe resolved `actools` inside the fresh venv even when a source-tree `PYTHONPATH` was supplied. This remains Python-3.13 exploratory evidence.
+- Exact CPython 3.14.7 + pip-tools 7.6.1 lock regeneration/compare, hash-locked install, exact tool versions, complete `python tools/check_source.py`, real pip-audit 2.10.1 output and GitHub-hosted source CI remain pending under E01. The hosted run additionally requires separate publication/PR authority.
+- Produce a new local correction candidate, cumulative diff/manifest, finding-by-finding disposition and retest receipt; then use CPD-12 focused re-review. CP-002 stays planned/inactive.

@@ -5,8 +5,8 @@
 ### Added
 
 - CP-001 development package skeleton for the fresh-install rewrite, with no runtime dependencies.
-- Truthful `actools version [--format human|json]` and bounded help/error behavior; no installer or future command stubs are exposed.
-- Narrow `Source CI` workflow and canonical source checker with pinned action identities, hash-locked tooling input, package-inventory checks and controlled negative fixtures.
+- Truthful `actools version [--format human|json]`, controlled help delivery and bounded non-reflective exit-3 invocation errors; no installer or future command stubs are exposed.
+- Narrow `Source CI` workflow and canonical source checker with exact workflow-shape enforcement, pinned action identities, hash-locked tooling input, complete scanner-coverage policy, closed wheel shape, installed-launcher/import-origin checks and reason-bound negative fixtures.
 - Root license/notices, contributor/agent/security guidance and the initial package/source-CI ADR.
 
 ### Known limits

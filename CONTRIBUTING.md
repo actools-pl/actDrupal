@@ -21,7 +21,7 @@ Direct source inputs are in `requirements/ci.in`. The lock-generation contract i
 
 ## What the canonical check establishes
 
-It verifies exact Python/tool versions, pinned/hash-closed dependency input, workflow triggers/permissions/action pins, unit and controlled negative fixtures, a wheel build, wheel inventory, installation into a fresh virtual environment, truthful version/help/error behavior, and a fail-closed dependency vulnerability audit. Required execution that is unavailable or errors remains a failed check.
+It verifies exact Python/tool versions and hash-closed inputs; the complete fixed source-workflow shape; unit and reason-bound controlled negative fixtures; a closed wheel inventory and metadata; the actual installed `actools` launcher plus import origin; truthful version/help and fixed non-reflective exit-3 invocation errors; real-pipe output failure; and exact complete `pip-audit==2.10.1` dependency coverage. Required execution that is unavailable, incomplete or errors remains a failed check.
 
 A passing source check is not a release, server, Drupal, backup/restore or production qualification. Do not mark G01/G09/G22 or other product-wide gates PASS from CP-001 source fixtures.
 

@@ -17,18 +17,18 @@ The workflow uses exactly the same checker. Its workflow name is `Source CI`; th
 
 `requirements/ci.in` pins direct inputs. `requirements/ci.lock` pins the resolved CI closure and SHA-256 wheel identities for the declared Linux/Python target. The build package itself has zero runtime dependencies.
 
-Lock-generation contract: use CPython 3.14.7 and `pip-tools==7.6.1` in a disposable generation environment. Because the coordinator container for the initial candidate had no package-index network path, the candidate lock was assembled from reviewed package-index metadata and **must be regenerated/compared before remote publication**. A difference is a review input, not something to overwrite silently.
+Lock-generation contract: use CPython 3.14.7 and `pip-tools==7.6.1` in a disposable generation environment. The initial lock was assembled from reviewed package-index metadata because the coordinator container had no package-index network path. It therefore **must be regenerated and compared in the declared environment before remote publication**. Preserve the command, input/output digests and explanation of every semantic difference; do not silently overwrite the reviewed input.
 
 ## Assertions made by `tools/check_source.py`
 
 1. Exact Python and direct source-tool versions are present.
-2. Every locked requirement is exact and has an allowed SHA-256; wheel-only policy is present.
-3. The actual workflow has only bounded triggers, read-only repository permission, fixed runner/Python and immutable action pins; no secrets, OIDC, self-hosted runner or deployment/write permission is accepted.
-4. Unit tests cover exact human/JSON version output, help, unsupported invocation, closed stdin, a secret canary and a bounded broken pipe.
-5. Controlled failure fixtures really fail; the invalid-package fixture cannot build.
-6. A wheel is built and its inventory excludes repository history, coding/reference material, tests, tools, fixtures, credentials and experimental seeds.
-7. That exact wheel installs into a fresh virtual environment and version/help work from outside the source tree without legacy files.
-8. `pip-audit` runs with strict/hash requirements and dependency resolution disabled. Only exit 0 plus valid vulnerability-free JSON is PASS. Unavailable execution, scanner error, malformed output or vulnerability evidence is non-PASS.
+2. Every locked requirement is exact and hashed, the direct input set is unchanged, and wheel-only policy is present.
+3. The source workflow matches the complete approved CP-001 workflow shape: only pull requests to `main` and pushes to `main`, repository `contents: read`, GitHub-hosted `ubuntu-24.04`, CPython 3.14.7, immutable checkout/setup-python pins, non-persisted checkout credentials, the exact locked-install step and the canonical check step. Extra triggers, job-level authority, ignored failures, runner changes or extra execution are rejected.
+4. Unit tests cover exact human/JSON version output and help, architecture exit code **3** for invalid invocation/report failures, bounded non-reflective error text, closed stdin, secret canaries, write/flush failures and real closed pipes in buffered and unbuffered Python.
+5. Controlled failure fixtures must fail for their intended reason: the deliberate marker and the intentionally missing build backend are checked, so a missing test tool cannot masquerade as a successful negative test.
+6. A wheel is built and must have the closed nine-member CP-001 inventory: the two owned runtime Python files plus only the expected `actools_drupal-0.1.0.dev0.dist-info` metadata/license files. Duplicate, malformed, traversal, nested test/Git/credential material and unrelated metadata roots are rejected. Distribution identity, Python range, zero runtime requirements, MIT license, console entry point, pure-wheel metadata and packaged license bytes are checked.
+7. That exact wheel digest is bound to installed acceptance checks. The fresh environment is invoked through its absolute `actools` console launcher from outside the source tree with `PYTHONPATH`/`PYTHONHOME` overrides removed; an isolated import probe must resolve `actools` inside that environment and confirm distribution/version/zero-runtime-requirement metadata.
+8. `pip-audit==2.10.1` runs with strict/hash requirements, `--no-deps` and `--disable-pip`. Its pinned JSON formatter contract is the object envelope `{"dependencies": [...], "fixes": [...]}`. PASS requires complete, duplicate-free, unskipped package/version coverage exactly matching every locked distribution, explicit empty vulnerability lists and no fixes. Empty/incomplete coverage, skipped or malformed records, mismatched versions, scanner error/unavailability or any vulnerability is non-PASS. The exact 2.10.1 formatter contract is bound to `pypa/pip-audit` tag `v2.10.1`, `pip_audit/_format/json.py`; real scanner output remains part of the E01 execution gate.
 
 ## Controlled negative fixtures
 
@@ -37,14 +37,14 @@ python tests/fixtures/deliberate_failure.py
 python -m build --wheel --no-isolation tests/fixtures/invalid_package
 ```
 
-Both commands are expected to return nonzero. Scanner-policy negatives are data-only files under `tests/fixtures/scanner_policy/`; no exploit code is executed.
+Both commands are expected to return nonzero **for the intended fixture reason**. Scanner-policy negatives are data-only files under `tests/fixtures/scanner_policy/`; no exploit code is executed.
 
 ## Expected outcomes and limits
 
-The canonical checker prints only `SOURCE-CI: PASS` on complete success and exits zero. Any required missing tool, wrong version, build failure, scanner failure or assertion failure exits nonzero and prints `SOURCE-CI: FAIL` with bounded diagnostic context.
+On complete success the checker prints the exact built wheel SHA-256 followed by `SOURCE-CI: PASS` and exits zero. Any required missing/wrong tool, lock or workflow mismatch, build/install/inventory failure, scanner failure or assertion failure exits nonzero and prints `SOURCE-CI: FAIL` with bounded diagnostic context.
 
 A source-CI PASS does **not** establish Drupal installation, privileged execution, server hardening, firewall/SSH behavior, backups/restores, release signing or production admission. It does not mark full G01/G09/G22 or any other product-wide gate PASS.
 
-## Current candidate evidence boundary
+## Current correction evidence boundary
 
-The initial coordinator container had Python 3.13.5 and no external package-index resolution. It can exercise source-level unit/static logic, but the exact CPython 3.14.7 build/install/audit path remains pending until run in the declared environment. Preserve that distinction in review and evidence records.
+Independent review `CP001-IR-40362742-v1` returned **CHANGES REQUESTED** with F01-F06 and evidence gate E01 open. The corrections address scanner completeness/format binding, exit/error safety, help delivery failure, wheel shape, installed launcher/import isolation and exact workflow assurance. Focused correction tests may run on the available Python 3.13.5 and remain explicitly non-qualifying. CPython 3.14.7 lock regeneration/install, complete canonical build/install/audit, and the later separately authorised GitHub-hosted workflow run remain pending until actually executed.

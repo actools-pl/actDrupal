@@ -1,6 +1,6 @@
 # ADR-0001 — Minimal Python package and fail-closed source CI
 
-Status: **blocked on remaining E01 execution; F01-F06 source corrections are independently verified, and the Ubuntu-26.04/resolver-lock correction requires focused CPD-12 review**. Date UTC: 2026-09-10. Decision owner: human task owner MP Singh under the bounded CP-001 authorization.
+Status: **accepted and integrated for the bounded CP-001 source slice; F01-F06 and E01 are closed, post-merge Source CI passed, and `CP001-IR-58cfa0d-post-merge-v1` accepts the integration. PM-R01 is a records/documentation chronology closeout pending focused review.** Date UTC: 2026-09-11. Decision owner: human task owner MP Singh under the bounded CP-001 authorization.
 
 ## Context
 
@@ -35,8 +35,8 @@ The first independent review, `CP001-IR-40362742-v1`, reviewed candidate `403627
 
 ## Consequences and evidence boundary
 
-CP-002 remains blocked until CP-001 acceptance. The provisional JSON version payload is not the later full §18.5 result envelope; downstream compatibility transition belongs to the first consuming schema task.
+The provisional JSON version payload is not the later full §18.5 result envelope; downstream compatibility transition belongs to the first consuming schema task.
 
-The coordinator environment can run focused source tests on Python 3.13.5, but that is not E01. E01 Phase 1C has now completed resolver-backed lock regeneration/comparison under CPython 3.14.7 + pip 26.2.1 + pip-tools 7.6.1 on Ubuntu 26.04.1 x86_64. Before acceptance/publication, install the exact committed lock with hash enforcement, confirm exact tool versions and dependency consistency, run the corrected canonical checker including real pip-audit output and wheel/launcher checks, and preserve exact digests. The real GitHub-hosted workflow run requires a later separately authorised publication/PR step and is not implied here.
+The exact local E01 sequence completed on Ubuntu Server 26.04.1 LTS x86_64 / CPython 3.14.7: resolver-backed lock reproduction, hash-enforced installation, exact tool/dependency checks, genuine pip-audit coverage, real wheel/launcher/import checks, negative fixtures and the canonical checker. `CP001-IR-2aafec4-local-receipts-v1` accepted Local E01. The GitHub-hosted PR run `34569300056` then passed on the reviewed PR subject and `CP001-IR-2aafec4-E01H-v1` closed E01-H/overall E01. MP Singh separately accepted candidate `2aafec4c15a8ea1f05a2a4d97268b8dd1e3fbbec`; PR #3 integrated it as normal merge `58cfa0d53abb002bd33cd185f56f62c9d830162c` with identical tree `4ca87f34300ba92e37f3e331d8e5ce1805fb41d0`. The push-triggered Source CI run `34571622780` passed on that actual merge, and `CP001-IR-58cfa0d-post-merge-v1` accepted the bounded integration result.
 
-Task: `coding/tasks/CP-001.md`. Review route: CPD-12. G01/G09/G22 and UX anchors remain requirement references, not passed product gates.
+PM-R01 changes chronology/index records only; it does not modify this technical decision. CP-002 remains planned/inactive until the records-only closeout is independently reviewed/integrated and activation is separately authorized. Task: `coding/tasks/CP-001.md`. Review route: CPD-12. G01/G09/G22 and UX anchors remain requirement references, not passed product gates.

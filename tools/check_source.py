@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Canonical CP-001 source checks used locally and by GitHub Actions."""
+"""Canonical CP-002 source checks used locally and by GitHub Actions."""
 
 from __future__ import annotations
 
@@ -26,6 +26,24 @@ EXPECTED_TOOLS = {
     "pip-audit": "2.10.1",
     "pytest": "9.1.1",
     "setuptools": "84.0.0",
+    "PyYAML": "6.0.3",
+    "jsonschema": "4.26.0",
+    "rfc8785": "0.1.4",
+}
+DIRECT_INPUTS = {
+    "build": "1.6.0",
+    "pip": "26.2.1",
+    "pip-audit": "2.10.1",
+    "pytest": "9.1.1",
+    "setuptools": "84.0.0",
+    "pyyaml": "6.0.3",
+    "jsonschema": "4.26.0",
+    "rfc8785": "0.1.4",
+}
+EXPECTED_RUNTIME_REQUIREMENTS = {
+    "pyyaml": "6.0.3",
+    "jsonschema": "4.26.0",
+    "rfc8785": "0.1.4",
 }
 CHECKOUT_SHA = "3d3c42e5aac5ba805825da76410c181273ba90b1"
 SETUP_PYTHON_SHA = "5fda3b95a4ea91299a34e894583c3862153e4b97"
@@ -34,9 +52,25 @@ LOCK_WHEEL_ONLY = "--only-binary :all:"
 SOURCE_WHEEL_ONLY = "--only-binary=:all:"
 WORKFLOW = ROOT / ".github" / "workflows" / "source-ci.yml"
 DIST_INFO = "actools_drupal-0.1.0.dev0.dist-info"
+CONTRACT_FILES = {
+    "actools/contracts/__init__.py",
+    "actools/contracts/canonical.py",
+    "actools/contracts/configuration.py",
+    "actools/contracts/errors.py",
+    "actools/contracts/schemas/common-1.0.0.schema.json",
+    "actools/contracts/schemas/configuration-1.0.0.schema.json",
+    "actools/contracts/schemas/configuration-defaults-1.0.0.json",
+}
 EXPECTED_WHEEL_MEMBERS = {
     "actools/__init__.py",
     "actools/cli.py",
+    "actools/contracts/__init__.py",
+    "actools/contracts/canonical.py",
+    "actools/contracts/configuration.py",
+    "actools/contracts/errors.py",
+    "actools/contracts/schemas/common-1.0.0.schema.json",
+    "actools/contracts/schemas/configuration-1.0.0.schema.json",
+    "actools/contracts/schemas/configuration-defaults-1.0.0.json",
     f"{DIST_INFO}/licenses/LICENSE",
     f"{DIST_INFO}/licenses/NOTICE.md",
     f"{DIST_INFO}/METADATA",
@@ -99,7 +133,13 @@ def _bounded(text: str, limit: int = 4000) -> str:
     return "...[truncated]...\n" + text[-limit:]
 
 
-def run(command: list[str], *, cwd: Path = ROOT, check: bool = True, **kwargs) -> subprocess.CompletedProcess[str]:
+def run(
+    command: list[str],
+    *,
+    cwd: Path = ROOT,
+    check: bool = True,
+    **kwargs,
+) -> subprocess.CompletedProcess[str]:
     proc = subprocess.run(
         command,
         cwd=cwd,
@@ -127,10 +167,7 @@ def requirement_records(text: str) -> list[str]:
         stripped = raw.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        if current:
-            current += " " + stripped
-        else:
-            current = stripped
+        current = f"{current} {stripped}".strip() if current else stripped
         if current.endswith("\\"):
             current = current[:-1].rstrip()
             continue
@@ -143,11 +180,13 @@ def requirement_records(text: str) -> list[str]:
 
 def locked_packages() -> dict[str, str]:
     expected: dict[str, str] = {}
-    records = requirement_records(LOCK.read_text(encoding="utf-8"))
-    for record in records:
+    for record in requirement_records(LOCK.read_text(encoding="utf-8")):
         if record.startswith("--"):
             continue
-        match = re.match(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]+\])?==([^\s]+)(?:\s|$)", record)
+        match = re.match(
+            r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]+\])?==([^\s]+)(?:\s|$)",
+            record,
+        )
         if not match:
             raise CheckFailure(f"cannot parse locked distribution identity: {record}")
         name = _canonical_name(match.group(1))
@@ -173,13 +212,15 @@ def classify_scanner_result(
     if returncode is None:
         return ScannerResult("ERROR", False, "scanner return code is unknown")
     if returncode != 0:
-        return ScannerResult("VULNERABLE" if returncode == 1 else "ERROR", False, f"scanner exit {returncode}")
+        return ScannerResult(
+            "VULNERABLE" if returncode == 1 else "ERROR",
+            False,
+            f"scanner exit {returncode}",
+        )
     try:
         parsed = json.loads(payload)
     except json.JSONDecodeError as exc:
         return ScannerResult("ERROR", False, f"invalid scanner JSON: {exc}")
-
-    # pip-audit 2.10.1 JsonFormat emits exactly this manifest envelope.
     if not isinstance(parsed, dict) or set(parsed) != {"dependencies", "fixes"}:
         return ScannerResult("ERROR", False, "scanner JSON envelope is invalid")
     dependencies = parsed.get("dependencies")
@@ -196,30 +237,54 @@ def classify_scanner_result(
         if "skip_reason" in dependency:
             return ScannerResult("ERROR", False, "scanner skipped one or more dependencies")
         if set(dependency) != {"name", "version", "vulns"}:
-            return ScannerResult("ERROR", False, "scanner dependency record has missing or unexpected fields")
+            return ScannerResult(
+                "ERROR",
+                False,
+                "scanner dependency record has missing or unexpected fields",
+            )
         name = dependency.get("name")
         version = dependency.get("version")
         vulns = dependency.get("vulns")
-        if not isinstance(name, str) or not name.strip() or not isinstance(version, str) or not version.strip():
+        if (
+            not isinstance(name, str)
+            or not name.strip()
+            or not isinstance(version, str)
+            or not version.strip()
+        ):
             return ScannerResult("ERROR", False, "scanner dependency identity is invalid")
         if not isinstance(vulns, list):
             return ScannerResult("ERROR", False, "scanner vulnerability field is invalid")
         canonical = _canonical_name(name)
         if canonical in observed:
-            return ScannerResult("ERROR", False, f"scanner duplicated dependency: {canonical}")
+            return ScannerResult(
+                "ERROR", False, f"scanner duplicated dependency: {canonical}"
+            )
         observed[canonical] = version
         if vulns:
-            return ScannerResult("VULNERABLE", False, f"scanner reported vulnerability for {canonical}")
+            return ScannerResult(
+                "VULNERABLE", False, f"scanner reported vulnerability for {canonical}"
+            )
 
-    expected = {_canonical_name(name): version for name, version in expected_packages.items()}
+    expected = {
+        _canonical_name(name): version for name, version in expected_packages.items()
+    }
     if observed != expected:
         missing = sorted(set(expected) - set(observed))
         unexpected = sorted(set(observed) - set(expected))
-        mismatched = sorted(name for name in set(expected) & set(observed) if expected[name] != observed[name])
-        detail = f"scanner coverage mismatch: missing={missing}; unexpected={unexpected}; version_mismatch={mismatched}"
-        return ScannerResult("ERROR", False, detail)
-
-    return ScannerResult("PASS", True, f"complete clean coverage for {len(expected)} locked distributions")
+        mismatched = sorted(
+            name
+            for name in set(expected) & set(observed)
+            if expected[name] != observed[name]
+        )
+        return ScannerResult(
+            "ERROR",
+            False,
+            "scanner coverage mismatch: "
+            f"missing={missing}; unexpected={unexpected}; version_mismatch={mismatched}",
+        )
+    return ScannerResult(
+        "PASS", True, f"complete clean coverage for {len(expected)} locked distributions"
+    )
 
 
 def verify_environment() -> None:
@@ -254,31 +319,45 @@ def verify_lock() -> None:
         if not hashes:
             raise CheckFailure(f"requirement lacks SHA-256 hash: {record}")
 
-    direct = {
-        "build": "1.6.0",
-        "pip": "26.2.1",
-        "pip-audit": "2.10.1",
-        "pytest": "9.1.1",
-        "setuptools": "84.0.0",
-    }
     packages = locked_packages()
-    for package, version in direct.items():
+    for package, version in DIRECT_INPUTS.items():
         if packages.get(package) != version:
-            raise CheckFailure(f"direct source input is absent or changed in lock: {package}=={version}")
+            raise CheckFailure(
+                f"direct source/runtime input is absent or changed in lock: {package}=={version}"
+            )
 
-    source_records = requirement_records((ROOT / "requirements" / "ci.in").read_text(encoding="utf-8"))
+    source_records = requirement_records(
+        (ROOT / "requirements" / "ci.in").read_text(encoding="utf-8")
+    )
     source_options = [record for record in source_records if record.startswith("--")]
     if source_options != [SOURCE_WHEEL_ONLY]:
-        raise CheckFailure("requirements/ci.in must contain only the activated wheel-only artifact directive")
-    source_requirements = {record for record in source_records if not record.startswith("--")}
-    expected_source = {f"{package}=={version}" for package, version in direct.items()}
+        raise CheckFailure(
+            "requirements/ci.in must contain only the activated wheel-only artifact directive"
+        )
+    source_requirements = {
+        record for record in source_records if not record.startswith("--")
+    }
+    expected_source = {
+        f"{package}=={version}"
+        for package, version in {
+            "build": "1.6.0",
+            "pip": "26.2.1",
+            "pip-audit": "2.10.1",
+            "pytest": "9.1.1",
+            "setuptools": "84.0.0",
+            "PyYAML": "6.0.3",
+            "jsonschema": "4.26.0",
+            "rfc8785": "0.1.4",
+        }.items()
+    }
     if source_requirements != expected_source:
-        raise CheckFailure("requirements/ci.in does not exactly match the activated direct source-tool contract")
+        raise CheckFailure(
+            "requirements/ci.in does not exactly match the activated direct source/runtime contract"
+        )
 
 
 def verify_workflow_text(text: str) -> None:
-    normalised = text.replace("\r\n", "\n")
-    if normalised != EXPECTED_WORKFLOW:
+    if text.replace("\r\n", "\n") != EXPECTED_WORKFLOW:
         raise CheckFailure("source CI workflow differs from the exact approved CP-001 structure")
 
 
@@ -294,6 +373,20 @@ def _safe_wheel_member(name: str) -> None:
         raise CheckFailure(f"unsafe wheel member path: {name!r}")
 
 
+def _metadata_runtime_requirements(metadata: object) -> dict[str, str]:
+    values = metadata.get_all("Requires-Dist") or []  # type: ignore[attr-defined]
+    observed: dict[str, str] = {}
+    for value in values:
+        match = re.fullmatch(r"([A-Za-z0-9][A-Za-z0-9._-]*)==([^ ;]+)", value)
+        if not match:
+            raise CheckFailure(f"wheel runtime requirement is not an exact pin: {value}")
+        name = _canonical_name(match.group(1))
+        if name in observed:
+            raise CheckFailure(f"wheel duplicates runtime requirement: {name}")
+        observed[name] = match.group(2)
+    return observed
+
+
 def verify_wheel_inventory(wheel: Path) -> str:
     with zipfile.ZipFile(wheel) as archive:
         names = archive.namelist()
@@ -305,15 +398,17 @@ def verify_wheel_inventory(wheel: Path) -> str:
         if actual != EXPECTED_WHEEL_MEMBERS:
             missing = sorted(EXPECTED_WHEEL_MEMBERS - actual)
             unexpected = sorted(actual - EXPECTED_WHEEL_MEMBERS)
-            raise CheckFailure(f"wheel inventory mismatch: missing={missing}; unexpected={unexpected}")
+            raise CheckFailure(
+                f"wheel inventory mismatch: missing={missing}; unexpected={unexpected}"
+            )
 
         metadata = BytesParser().parsebytes(archive.read(f"{DIST_INFO}/METADATA"))
         if metadata.get("Name") != "actools-drupal" or metadata.get("Version") != "0.1.0.dev0":
             raise CheckFailure("wheel distribution identity/version is incorrect")
         if metadata.get("Requires-Python") not in {">=3.14,<3.15", "<3.15,>=3.14"}:
             raise CheckFailure("wheel Requires-Python metadata is incorrect")
-        if metadata.get_all("Requires-Dist"):
-            raise CheckFailure("wheel unexpectedly declares runtime dependencies")
+        if _metadata_runtime_requirements(metadata) != EXPECTED_RUNTIME_REQUIREMENTS:
+            raise CheckFailure("wheel runtime dependency metadata is not the exact CP-002 contract")
         if metadata.get("License-Expression") != "MIT":
             raise CheckFailure("wheel license expression is not MIT")
 
@@ -330,44 +425,102 @@ def verify_wheel_inventory(wheel: Path) -> str:
             raise CheckFailure("wheel was not generated by the activated setuptools version")
 
         for leaf in ("LICENSE", "NOTICE.md"):
-            packaged = archive.read(f"{DIST_INFO}/licenses/{leaf}")
-            if packaged != (ROOT / leaf).read_bytes():
+            if archive.read(f"{DIST_INFO}/licenses/{leaf}") != (ROOT / leaf).read_bytes():
                 raise CheckFailure(f"wheel packaged {leaf} differs from repository source")
+        for member in CONTRACT_FILES:
+            source = ROOT / "src" / member
+            if archive.read(member) != source.read_bytes():
+                raise CheckFailure(f"wheel packaged contract differs from repository source: {member}")
 
     return hashlib.sha256(wheel.read_bytes()).hexdigest()
 
 
 def verify_negative_fixtures() -> None:
-    deliberate = run([sys.executable, "tests/fixtures/deliberate_failure.py"], check=False)
+    deliberate = run(
+        [sys.executable, "tests/fixtures/deliberate_failure.py"], check=False
+    )
     marker = "CP-001 intentional negative-test fixture"
     if deliberate.returncode != 1 or marker not in deliberate.stderr:
         raise CheckFailure("deliberate failure fixture did not fail for its intended marker")
 
     invalid = run(
-        [sys.executable, "-m", "build", "--wheel", "--no-isolation", "tests/fixtures/invalid_package"],
+        [
+            sys.executable,
+            "-m",
+            "build",
+            "--wheel",
+            "--no-isolation",
+            "tests/fixtures/invalid_package",
+        ],
         check=False,
     )
     backend_marker = "cp001_intentionally_missing_backend"
     combined = invalid.stdout + "\n" + invalid.stderr
     if invalid.returncode == 0 or backend_marker not in combined:
-        raise CheckFailure("invalid-package fixture did not fail for the intentionally missing backend")
+        raise CheckFailure(
+            "invalid-package fixture did not fail for the intentionally missing backend"
+        )
 
 
 def _clean_subprocess_env() -> dict[str, str]:
-    env = {key: value for key, value in os.environ.items() if key not in {"PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV"}}
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if key not in {"PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV"}
+    }
     env["PYTHONNOUSERSITE"] = "1"
     return env
 
 
-def verify_installed_cli(wheel: Path, directory: Path, wheel_sha256: str) -> None:
+def _create_isolated_installed_env(
+    directory: Path,
+) -> tuple[Path, Path, Path, dict[str, str]]:
+    """Create a fresh verifier venv and hash-install the exact locked closure."""
     env_dir = directory / "installed"
+    # Keep this verifier independent of both the invoking project venv and any
+    # interpreter-global site-packages. Runtime dependencies are installed from
+    # the same generated, hash-locked closure that the canonical source gate uses.
     venv.EnvBuilder(with_pip=True, clear=True).create(env_dir)
     scripts = "Scripts" if os.name == "nt" else "bin"
     python = env_dir / scripts / ("python.exe" if os.name == "nt" else "python")
     launcher = env_dir / scripts / ("actools.exe" if os.name == "nt" else "actools")
     env = _clean_subprocess_env()
 
-    run([str(python), "-m", "pip", "install", "--no-index", "--no-deps", str(wheel)], cwd=directory, env=env)
+    run(
+        [
+            str(python),
+            "-m",
+            "pip",
+            "install",
+            "--require-hashes",
+            "-r",
+            str(LOCK),
+        ],
+        cwd=directory,
+        env=env,
+    )
+    run([str(python), "-m", "pip", "check"], cwd=directory, env=env)
+    return env_dir, python, launcher, env
+
+
+def verify_installed_cli(wheel: Path, directory: Path, wheel_sha256: str) -> None:
+    env_dir, python, launcher, env = _create_isolated_installed_env(directory)
+
+    # The candidate itself is installed only from the wheel already built and
+    # inventoried above. Dependencies cannot be resolved or replaced here.
+    run(
+        [
+            str(python),
+            "-m",
+            "pip",
+            "install",
+            "--no-index",
+            "--no-deps",
+            str(wheel),
+        ],
+        cwd=directory,
+        env=env,
+    )
     if not launcher.is_file():
         raise CheckFailure("installed actools console launcher is missing")
 
@@ -375,40 +528,110 @@ def verify_installed_cli(wheel: Path, directory: Path, wheel_sha256: str) -> Non
     human = run([str(launcher), "version"], cwd=directory, env=env)
     if human.stdout != expected or human.stderr:
         raise CheckFailure("installed launcher human version output is not exact/plain")
-    machine = run([str(launcher), "version", "--format", "json"], cwd=directory, env=env)
+    machine = run(
+        [str(launcher), "version", "--format", "json"], cwd=directory, env=env
+    )
     if machine.stdout != '{"program":"actools","version":"0.1.0.dev0"}\n' or machine.stderr:
         raise CheckFailure("installed launcher JSON version output is not exact")
     root_help = run([str(launcher), "--help"], cwd=directory, env=env)
     version_help = run([str(launcher), "version", "--help"], cwd=directory, env=env)
-    if "version" not in root_help.stdout or "install" in root_help.stdout.lower() or "--format" not in version_help.stdout:
+    if (
+        "version" not in root_help.stdout
+        or "install" in root_help.stdout.lower()
+        or "--format" not in version_help.stdout
+    ):
         raise CheckFailure("installed launcher help surface is incorrect")
-    unsupported = run([str(launcher), "install"], cwd=directory, check=False, stdin=subprocess.DEVNULL, env=env)
+    unsupported = run(
+        [str(launcher), "install"],
+        cwd=directory,
+        check=False,
+        stdin=subprocess.DEVNULL,
+        env=env,
+    )
     if unsupported.returncode != 3 or unsupported.stderr != "actools: error: invalid invocation\n":
         raise CheckFailure("installed launcher unsupported invocation contract is incorrect")
 
-    probe_code = (
-        "import actools, importlib.metadata, json, pathlib; "
-        "m=importlib.metadata.metadata('actools-drupal'); "
-        "print(json.dumps({'module':str(pathlib.Path(actools.__file__).resolve()),"
-        "'version':importlib.metadata.version('actools-drupal'),"
-        "'requires':m.get_all('Requires-Dist') or []}, sort_keys=True))"
-    )
+    probe_code = """
+import actools
+import importlib
+import importlib.metadata
+import json
+import pathlib
+import sys
+from actools.contracts.configuration import load_configuration
+from importlib import resources
+m = importlib.metadata.metadata('actools-drupal')
+runtime = {}
+for distribution, module_name in (('PyYAML', 'yaml'), ('jsonschema', 'jsonschema'), ('rfc8785', 'rfc8785')):
+    dist = importlib.metadata.distribution(distribution)
+    module = importlib.import_module(module_name)
+    runtime[distribution] = {
+        'version': dist.version,
+        'distribution_root': str(pathlib.Path(dist.locate_file('')).resolve()),
+        'module': str(pathlib.Path(module.__file__).resolve()),
+    }
+raw = b'{"schema_version":"1.0.0","profile":"single-site-production","installation":{"id":"install-main"},"site":{"id":"site-main","domain":"example.test"},"environment":{"id":"production-main"},"host":{"management_endpoint":"admin.example.test:22","filesystem_authority_id":"fs-auth:main"},"secrets":{"database_credentials":"secret://database/application"},"references":{"policy":"policy://single-site-production/1.0.0","release":"release://actools/0.1.0-dev"}}'
+resolved = load_configuration(raw, syntax='json')
+schema = resources.files('actools.contracts').joinpath('schemas', 'configuration-1.0.0.schema.json').read_bytes()
+print(json.dumps({
+    'prefix': str(pathlib.Path(sys.prefix).resolve()),
+    'module': str(pathlib.Path(actools.__file__).resolve()),
+    'version': importlib.metadata.version('actools-drupal'),
+    'requires': sorted(m.get_all('Requires-Dist') or []),
+    'runtime': runtime,
+    'dialect': json.loads(schema.decode('utf-8'))['$schema'],
+    'cache_mode': resolved.configuration['drupal']['cache']['mode'],
+    'origin': resolved.origins['/drupal/cache/mode']['origin'],
+}, sort_keys=True))
+"""
     probe = run([str(python), "-I", "-c", probe_code], cwd=directory, env=env)
     info = json.loads(probe.stdout)
+    env_root = env_dir.resolve()
+    if Path(info["prefix"]).resolve() != env_root:
+        raise CheckFailure("installed probe did not execute in the fresh virtual environment")
     module_path = Path(info["module"]).resolve()
-    if not module_path.is_relative_to(env_dir.resolve()) or module_path.is_relative_to(ROOT.resolve()):
+    if not module_path.is_relative_to(env_root) or module_path.is_relative_to(ROOT.resolve()):
         raise CheckFailure("installed import did not originate from the fresh virtual environment")
-    if info["version"] != "0.1.0.dev0" or info["requires"] != []:
-        raise CheckFailure("installed distribution identity/version/runtime dependency metadata is incorrect")
+    if info["version"] != "0.1.0.dev0":
+        raise CheckFailure("installed distribution version metadata is incorrect")
+    if info["requires"] != sorted(["PyYAML==6.0.3", "jsonschema==4.26.0", "rfc8785==0.1.4"]):
+        raise CheckFailure("installed runtime dependency metadata is incorrect")
+
+    runtime_expected = {"PyYAML": "6.0.3", "jsonschema": "4.26.0", "rfc8785": "0.1.4"}
+    runtime = info.get("runtime")
+    if not isinstance(runtime, dict) or set(runtime) != set(runtime_expected):
+        raise CheckFailure("installed runtime dependency probe is incomplete")
+    for distribution, expected_version in runtime_expected.items():
+        record = runtime[distribution]
+        if not isinstance(record, dict) or record.get("version") != expected_version:
+            raise CheckFailure(f"installed runtime dependency version is incorrect: {distribution}")
+        for field in ("distribution_root", "module"):
+            candidate = Path(record.get(field, "")).resolve()
+            if not candidate.is_relative_to(env_root) or candidate.is_relative_to(ROOT.resolve()):
+                raise CheckFailure(
+                    f"installed runtime dependency escaped the fresh verification environment: "
+                    f"{distribution} {field}"
+                )
+    if (
+        info["dialect"] != "https://json-schema.org/draft/2020-12/schema"
+        or info["cache_mode"] != "database"
+        or info["origin"] != "release_default"
+    ):
+        raise CheckFailure("installed CP-002 contract/schema/default probe failed")
     if hashlib.sha256(wheel.read_bytes()).hexdigest() != wheel_sha256:
         raise CheckFailure("wheel changed between inventory and installed-launcher checks")
+
 
 
 def run_audit() -> None:
     expected = locked_packages()
     with tempfile.TemporaryDirectory(prefix="actools-audit-") as tmp:
         audit_input = Path(tmp) / "requirements.txt"
-        lines = [line for line in LOCK.read_text(encoding="utf-8").splitlines() if line.strip() != LOCK_WHEEL_ONLY]
+        lines = [
+            line
+            for line in LOCK.read_text(encoding="utf-8").splitlines()
+            if line.strip() != LOCK_WHEEL_ONLY
+        ]
         audit_input.write_text("\n".join(lines) + "\n", encoding="utf-8")
         audit = run(
             [
@@ -435,8 +658,8 @@ def run_audit() -> None:
     )
     if not result.passing:
         raise CheckFailure(
-            f"dependency vulnerability check did not pass: {result.status}: {result.detail}\n"
-            f"{_bounded(audit.stderr)}"
+            "dependency vulnerability check did not pass: "
+            f"{result.status}: {result.detail}\n{_bounded(audit.stderr)}"
         )
 
 
@@ -444,21 +667,38 @@ def main() -> int:
     try:
         verify_environment()
         verify_lock()
+        run([sys.executable, "-m", "pip", "check"])
         verify_workflow()
         run([sys.executable, "-m", "pytest", "-q"])
         verify_negative_fixtures()
-        with tempfile.TemporaryDirectory(prefix="actools-cp001-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="actools-cp002-") as tmp:
             work = Path(tmp)
             out = work / "dist"
             out.mkdir()
-            run([sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(out), "."])
+            run(
+                [
+                    sys.executable,
+                    "-m",
+                    "build",
+                    "--wheel",
+                    "--no-isolation",
+                    "--outdir",
+                    str(out),
+                    ".",
+                ]
+            )
             wheels = list(out.glob("*.whl"))
             if len(wheels) != 1:
                 raise CheckFailure(f"expected one wheel, found {len(wheels)}")
             wheel_sha256 = verify_wheel_inventory(wheels[0])
             verify_installed_cli(wheels[0], work, wheel_sha256)
         run_audit()
-    except (CheckFailure, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+    except (
+        CheckFailure,
+        OSError,
+        subprocess.SubprocessError,
+        json.JSONDecodeError,
+    ) as exc:
         print(f"SOURCE-CI: FAIL: {exc}", file=sys.stderr)
         return 1
     print(f"SOURCE-CI: WHEEL-SHA256 {wheel_sha256}")

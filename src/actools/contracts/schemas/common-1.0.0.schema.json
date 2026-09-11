@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.actools.invalid/common-1.0.0.schema.json",
+  "$defs": {
+    "identifier": {"type":"string","minLength":2,"maxLength":63,"pattern":"^[a-z][a-z0-9-]{1,62}$"},
+    "domain": {"type":"string","maxLength":253,"format":"actools-domain"},
+    "endpoint": {"type":"string","maxLength":320,"format":"actools-endpoint"},
+    "filesystemAuthorityId": {"type":"string","maxLength":71,"format":"actools-filesystem-authority-id"},
+    "secretReference": {"type":"string","maxLength":160,"format":"actools-secret-reference"},
+    "policyReference": {"type":"string","maxLength":160,"pattern":"^policy://[a-z][a-z0-9-]{0,62}/[A-Za-z0-9._-]{1,64}$"},
+    "releaseReference": {"type":"string","maxLength":160,"pattern":"^release://[a-z][a-z0-9-]{0,62}/[A-Za-z0-9._-]{1,64}$"}
+  }
+}

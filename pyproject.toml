@@ -5,9 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "actools-drupal"
 dynamic = ["version"]
-description = "Development package skeleton for the actDrupal fresh-install installer"
+description = "Development package for the actDrupal fresh-install installer rewrite"
 requires-python = ">=3.14,<3.15"
-dependencies = []
+dependencies = [
+  "PyYAML==6.0.3",
+  "jsonschema==4.26.0",
+  "rfc8785==0.1.4",
+]
 license = "MIT"
 license-files = ["LICENSE", "NOTICE.md"]
 authors = [{name = "Actools"}]
@@ -29,7 +33,10 @@ version = {attr = "actools.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["actools"]
+include = ["actools", "actools.*"]
+
+[tool.setuptools.package-data]
+"actools.contracts" = ["schemas/*.json"]
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"

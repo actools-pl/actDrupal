@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "profile": "single-site-production",
+  "installation": {"id": "install-main"},
+  "site": {"id": "site-main", "domain": "example.test"},
+  "environment": {"id": "production-main"},
+  "host": {"management_endpoint": "admin.example.test:22", "filesystem_authority_id": "fs-auth:main"},
+  "secrets": {"database_credentials": "secret://database/application"},
+  "references": {"policy": "policy://single-site-production/1.0.0", "release": "release://actools/0.1.0-dev"}
+}

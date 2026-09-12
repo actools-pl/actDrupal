@@ -30,22 +30,22 @@ setuptools==84.0.0
 
 The final `requirements/ci.lock` is a resolver result, never a hand-written prediction. Generate it only with CPython 3.14.7, `pip==26.2.1` and `pip-tools==7.6.1` on the accepted Ubuntu Server 26.04.1 x86_64 reference, with pip configuration disabled, explicit PyPI index input, `--allow-unsafe`, `--generate-hashes`, backtracking resolution, no hash reuse and the wheel-only input policy. Record input and generated-lock SHA-256 values from actual bytes.
 
-The accepted generation command shape is:
+The accepted normalized generation command is:
 
 ```text
 pip-compile --no-config --index-url=https://pypi.org/simple --no-emit-index-url --allow-unsafe --generate-hashes --resolver=backtracking --no-reuse-hashes --no-annotate --no-strip-extras --output-file=requirements/ci.lock requirements/ci.in
 ```
 
-Run it only from the disposable accepted generation environment after confirming `python --version`, `python -m pip --version`, and `pip-compile --version`; do not substitute a different platform or tool version merely to obtain a lock.
+Set `CUSTOM_COMPILE_COMMAND` to that exact one-line command before invoking the same pinned pip-compile option set. This makes pip-tools' generated header record the truthful normalized command rather than reconstructing an incomplete or false command line. The canonical checker rejects any generated header that does not contain that exact command or that claims `--no-index`.
 
-This coding delivery intentionally leaves `requirements/ci.lock` operator-generated/pending because its sandbox is not that accepted environment. A stale CP-001 lock is not a CP-002 final candidate.
+Run generation only from the disposable accepted environment after confirming `python --version`, `python -m pip --version`, and `pip-compile --version`; do not substitute a different platform or tool version merely to obtain a lock. The historical r2 coding delivery intentionally omitted the lock because its sandbox was not the accepted environment. A review candidate must contain the exact-environment generated lock and its local generation/install/test receipts; a source tree that already contains such a lock must not be described as if lock generation were still pending. Hosted Source CI remains unexecuted until publication is separately authorized.
 
 ## Canonical checker assertions
 
 `tools/check_source.py` retains the CP-001 fail-closed workflow/scanner/CLI policy and evolves package truth for CP-002:
 
 1. exact CPython 3.14.7 and all eight direct installed versions;
-2. a hash-locked resolver closure whose direct pins exactly match `requirements/ci.in`, plus a successful `python -m pip check`;
+2. a hash-locked resolver closure whose direct pins exactly match `requirements/ci.in`, whose generated header records the exact normalized `CUSTOM_COMPILE_COMMAND` without `--no-index`, whose frozen dependency/hash body remains unchanged, plus a successful `python -m pip check`;
 3. byte-for-byte unchanged Source CI workflow shape, including only PR/push to `main`, `contents: read`, immutable action pins, `persist-credentials: false`, Ubuntu 26.04 and Python 3.14.7;
 4. the complete test suite, including strict parser/default/origin/JCS adversarial tests and all unchanged CP-001 CLI tests;
 5. the two CP-001 controlled negative build fixtures, still reason-bound;

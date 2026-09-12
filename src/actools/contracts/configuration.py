@@ -19,10 +19,10 @@ _JSON_NUMBER = re.compile('-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?
 _DOMAIN_LABEL = re.compile('[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\Z')
 _FS_AUTHORITY = re.compile('fs-auth:[a-z][a-z0-9-]{1,62}\\Z')
 _SECRET_REFERENCE = re.compile('secret://[a-z][a-z0-9-]{0,62}/[a-z][a-z0-9-]{0,62}\\Z')
-_DATE_LIKE = re.compile('\\d{4}-\\d{2}-\\d{2}(?:[Tt ].*)?\\Z')
+_DATE_LIKE = re.compile('(?:\\d{4}-\\d{2}-\\d{2}(?:[Tt ].*)?|\\d{4}-\\d{1,2}-\\d{1,2}[Tt ].*)\\Z')
 _TIME_LIKE = re.compile('\\d{1,2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:[Zz]|[+-]\\d{2}:?\\d{2})?\\Z')
 _SEXAGESIMAL = re.compile('[-+]?\\d+(?::[0-5]?\\d)+(?:\\.\\d+)?\\Z')
-_NUMERIC_EXTENSION = re.compile('(?:[-+]?0[xX][0-9a-fA-F_]+|[-+]?0[oO][0-7_]+|[-+]?0[bB][01_]+|[-+]?0[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?|[-+]?\\.[0-9]+(?:[eE][+-]?[0-9]+)?|[-+]?[0-9]+\\.|\\+[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\\Z')
+_NUMERIC_EXTENSION = re.compile('(?:[-+]?0[xX][0-9a-fA-F_]+|[-+]?0[oO][0-7_]+|[-+]?0[bB][01_]+|[-+]?0[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?|[-+]?\\.[0-9]+(?:[eE][+-]?[0-9]+)?|[-+]?[0-9]+\\.(?:[eE][+-]?[0-9]+)?|\\+[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\\Z')
 _AMBIGUOUS_WORDS = {'yes', 'no', 'on', 'off', 'y', 'n'}
 _FORMAT_CHECKER = FormatChecker()
 _FORMAT_CHECKER.checkers.clear()
@@ -47,7 +47,9 @@ def _is_domain(value: object) -> bool:
     return len(labels) >= 2 and all((_DOMAIN_LABEL.fullmatch(label) for label in labels))
 
 def _is_endpoint(value: object) -> bool:
-    if not isinstance(value, str) or not value:
+    if not isinstance(value, str) or not value or len(value) > 320:
+        return False
+    if any(ch.isspace() or ord(ch) < 0x20 or ord(ch) == 0x7f for ch in value):
         return False
     if value.startswith('['):
         close = value.find(']')
@@ -55,6 +57,8 @@ def _is_endpoint(value: object) -> bool:
             return False
         host = value[1:close]
         port_text = value[close + 2:]
+        if '%' in host:
+            return False
         try:
             if ipaddress.ip_address(host).version != 6:
                 return False
@@ -69,9 +73,18 @@ def _is_endpoint(value: object) -> bool:
         except ValueError:
             if not _is_domain(host):
                 return False
-    if not port_text.isascii() or not port_text.isdigit() or (len(port_text) > 1 and port_text.startswith('0')):
+    if (
+        not 1 <= len(port_text) <= 5
+        or not port_text.isascii()
+        or not port_text.isdigit()
+        or (len(port_text) > 1 and port_text.startswith('0'))
+    ):
         return False
-    return 1 <= int(port_text) <= 65535
+    try:
+        port = int(port_text)
+    except (ValueError, OverflowError):
+        return False
+    return 1 <= port <= 65535
 
 def _is_fs_authority(value: object) -> bool:
     return isinstance(value, str) and _FS_AUTHORITY.fullmatch(value) is not None
@@ -693,8 +706,9 @@ class ResolvedConfiguration:
         return canonical_json_bytes(self.resolution_envelope())
 
 def resolve_configuration(value: Mapping[str, Any]) -> ResolvedConfiguration:
-    operator = copy.deepcopy(dict(value))
-    _validate_data_limits(operator)
+    operator_input = dict(value)
+    _validate_data_limits(operator_input)
+    operator = copy.deepcopy(operator_input)
     _prevalidate_identity(operator)
     resolved = copy.deepcopy(operator)
     applied = _apply_defaults(resolved)

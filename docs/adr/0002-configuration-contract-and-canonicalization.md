@@ -1,6 +1,6 @@
 # ADR-0002 — Strict configuration contract and RFC 8785 canonicalization
 
-Status: **candidate for independent CP-002 review; not accepted, merged or published by this coding delivery.**
+Status: **implemented in a local CP-002 candidate; CPD-12 correction/review, acceptance, merge and publication remain pending.**
 
 ## Context
 
@@ -62,6 +62,6 @@ The distribution still has version `0.1.0.dev0` and the CP-001 CLI remains untou
 
 Configuration validity is not installation/production readiness. No host, Drupal, backup, restore, release-signing or product-wide gate is established by this ADR.
 
-The final CP-002 review subject must contain a real resolver-generated `requirements/ci.lock` produced under the accepted Ubuntu Server 26.04.1 x86_64 / CPython 3.14.7 / pip 26.2.1 / pip-tools 7.6.1 contract. This coder environment did not provide that accepted generation environment, so the lock remains an operator-generated final-candidate item rather than a hand-written artifact.
+A CP-002 review candidate is complete only when `requirements/ci.lock` has been resolver-generated under the accepted Ubuntu Server 26.04.1 x86_64 / CPython 3.14.7 / pip 26.2.1 / pip-tools 7.6.1 contract and the corresponding local receipts are retained. The historical r2 coding delivery intentionally omitted the lock; Human-Git subsequently generated it for the reviewed local candidate. Any correction that changes the generated header must regenerate the lock in that exact environment rather than hand-editing it, while preserving the frozen dependency/hash body. Hosted Source CI remains unexecuted until publication is separately authorized.
 
 The vector receipt values are present for deterministic source testing, but the packet-required Human-Git independent digest recomputation is still an evidence obligation before final review.

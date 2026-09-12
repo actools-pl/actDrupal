@@ -50,6 +50,15 @@ SETUP_PYTHON_SHA = "5fda3b95a4ea91299a34e894583c3862153e4b97"
 LOCK = ROOT / "requirements" / "ci.lock"
 LOCK_WHEEL_ONLY = "--only-binary :all:"
 SOURCE_WHEEL_ONLY = "--only-binary=:all:"
+EXPECTED_LOCK_COMPILE_COMMAND = (
+    "pip-compile --no-config --index-url=https://pypi.org/simple "
+    "--no-emit-index-url --allow-unsafe --generate-hashes "
+    "--resolver=backtracking --no-reuse-hashes --no-annotate "
+    "--no-strip-extras --output-file=requirements/ci.lock requirements/ci.in"
+)
+EXPECTED_LOCK_BODY_SHA256 = (
+    "ceabc2eb1fa81c35470bec0ab8a107a0c7c06291b6c47595d4402c01013d1a18"
+)
 WORKFLOW = ROOT / ".github" / "workflows" / "source-ci.yml"
 DIST_INFO = "actools_drupal-0.1.0.dev0.dist-info"
 CONTRACT_FILES = {
@@ -303,8 +312,34 @@ def verify_environment() -> None:
         raise CheckFailure("tool version mismatch: " + "; ".join(mismatches))
 
 
+
+def verify_lock_header(text: str) -> None:
+    marker_index = text.find(LOCK_WHEEL_ONLY)
+    if marker_index < 0:
+        raise CheckFailure("CI lock is missing the canonical wheel-only directive")
+    header = text[:marker_index]
+    command_lines = [
+        line for line in header.splitlines() if line.startswith("#    pip-compile")
+    ]
+    expected = f"#    {EXPECTED_LOCK_COMPILE_COMMAND}"
+    if command_lines != [expected]:
+        raise CheckFailure("CI lock generator header does not record the exact accepted command")
+    if re.search(r"(?<!\S)--no-index(?!\S)", header):
+        raise CheckFailure("CI lock generator header falsely claims --no-index")
+
+
+def lock_body_sha256(text: str) -> str:
+    marker_index = text.find(LOCK_WHEEL_ONLY)
+    if marker_index < 0:
+        raise CheckFailure("CI lock is missing the canonical wheel-only directive")
+    return hashlib.sha256(text[marker_index:].encode("utf-8")).hexdigest()
+
+
 def verify_lock() -> None:
     text = LOCK.read_text(encoding="utf-8")
+    verify_lock_header(text)
+    if lock_body_sha256(text) != EXPECTED_LOCK_BODY_SHA256:
+        raise CheckFailure("CI lock dependency/hash body differs from the frozen CP-002 contract")
     records = requirement_records(text)
     options = [record for record in records if record.startswith("--")]
     if options != [LOCK_WHEEL_ONLY]:

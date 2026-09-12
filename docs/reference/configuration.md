@@ -24,7 +24,7 @@ YAML is a convenience syntax for the same JSON-compatible model, not a general Y
 
 Accepted plain non-string forms are exactly lowercase `null`, `true`, `false`, and JSON-number lexical forms. Quoted scalars stay strings. Ordinary safe unquoted text stays string.
 
-Rejected forms include anchors/aliases, tags, merge keys, directives, multiple documents, duplicate/non-string keys, `~`, implicit empty nulls, `yes/no/on/off` variants, date/timestamp/time implicit forms, hexadecimal/octal/binary/sexagesimal/underscore numbers, `.nan`/`.inf`, leading-zero numeric forms, leading-plus/trailing-dot/dot-leading numeric extensions, and block scalar styles.
+Rejected forms include anchors/aliases, tags, merge keys, directives, multiple documents, duplicate/non-string keys, `~`, implicit empty nulls, `yes/no/on/off` variants, date/timestamp/time implicit forms (including one-digit month/day timestamp spellings recognized by the YAML resolver family), hexadecimal/octal/binary/sexagesimal/underscore numbers, `.nan`/`.inf`, leading-zero numeric forms, leading-plus/trailing-dot/dot-leading numeric extensions, trailing-dot mantissas combined with signed exponents such as `1.e+2`, and block scalar styles. Quoted equivalents remain ordinary strings.
 
 ## Resource limits
 
@@ -45,7 +45,7 @@ Aggregate-node accounting counts every container/scalar value and every mapping-
 Draft 2020-12 format assertions are active. The finite checker set contains only:
 
 - `actools-domain`: lowercase DNS-style multi-label domain;
-- `actools-endpoint`: DNS/IPv4 `host:port` or bracketed IPv6 `[address]:port`;
+- `actools-endpoint`: DNS/IPv4 `host:port` or bracketed **unscoped** IPv6 `[address]:port`; whitespace/control-bearing endpoint text and IPv6 `%zone` identifiers are not supported in contract 1.0.0; ports are ASCII decimal `1..65535` with 1–5 digits and no leading zero;
 - `actools-filesystem-authority-id`: `fs-auth:<identifier>`;
 - `actools-secret-reference`: `secret://<scope>/<name>`.
 

@@ -423,3 +423,244 @@ def test_extreme_numeric_lexemes_fail_with_bounded_actools_reasons():
     with pytest.raises(ConfigurationError) as exc:
         parse_yaml_bytes(b"value: " + huge_exponent + b"\n")
     assert exc.value.reason == "nonfinite_number"
+
+
+def _encoded_document(value: dict, syntax: str) -> bytes:
+    # JSON flow syntax is also valid YAML; using it here keeps all mutated
+    # control-bearing strings explicitly quoted for the YAML-path assertions.
+    return json.dumps(value, ensure_ascii=True, separators=(",", ":")).encode("utf-8")
+
+
+@pytest.mark.parametrize("syntax", ["json", "yaml"])
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "[fe80::1%eth0]:22",
+        "[fe80::1%bad\nzone]:22",
+        "[fe80::1%bad\rzone]:22",
+        "[fe80::1%bad\tzone]:22",
+        "[fe80::1%bad\x1bzone]:22",
+        "admin.example.test :22",
+        "admin.example.test:\t22",
+    ],
+)
+def test_ir01_scoped_or_control_bearing_endpoint_is_rejected_end_to_end(
+    syntax: str, endpoint: str
+) -> None:
+    value = minimal()
+    value["host"]["management_endpoint"] = endpoint
+    with pytest.raises(ConfigurationError) as exc:
+        load_configuration(_encoded_document(value, syntax), syntax=syntax)
+    assert (exc.value.path, exc.value.reason) == (
+        "/host/management_endpoint",
+        "invalid_format",
+    )
+    assert endpoint not in str(exc.value)
+    assert len(str(exc.value)) < 160
+
+
+@pytest.mark.parametrize("syntax", ["json", "yaml"])
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "admin.example.test:22",
+        "192.0.2.10:1",
+        "[2001:db8::1]:65535",
+    ],
+)
+def test_ir01_unscoped_endpoint_forms_remain_valid(syntax: str, endpoint: str) -> None:
+    value = minimal()
+    value["host"]["management_endpoint"] = endpoint
+    resolved = load_configuration(_encoded_document(value, syntax), syntax=syntax)
+    assert resolved.configuration["host"]["management_endpoint"] == endpoint
+
+
+_OWNED_SCALAR_CASES = [
+    (("installation", "id"), "install-main"),
+    (("site", "id"), "site-main"),
+    (("environment", "id"), "production-main"),
+    (("references", "policy"), "policy://single-site-production/1.0.0"),
+    (("references", "release"), "release://actools/0.1.0-dev"),
+]
+
+
+def _set_path(value: dict, path: tuple[str, ...], replacement: str) -> None:
+    current = value
+    for part in path[:-1]:
+        current = current[part]
+    current[path[-1]] = replacement
+
+
+@pytest.mark.parametrize("syntax", ["json", "yaml"])
+@pytest.mark.parametrize("path,valid", _OWNED_SCALAR_CASES)
+@pytest.mark.parametrize("suffix", ["\n", "\r", "\t", "\nextra"])
+def test_ir02_owned_ids_and_references_require_true_end_of_string(
+    syntax: str, path: tuple[str, ...], valid: str, suffix: str
+) -> None:
+    value = minimal()
+    rejected = valid + suffix
+    _set_path(value, path, rejected)
+    with pytest.raises(ConfigurationError) as exc:
+        load_configuration(_encoded_document(value, syntax), syntax=syntax)
+    expected_path = "/" + "/".join(path)
+    assert (exc.value.path, exc.value.reason) == (expected_path, "invalid_value_syntax")
+    assert rejected not in str(exc.value)
+
+
+
+
+def test_ir02_schema_patterns_use_ecmascript_compatible_true_end_construction() -> None:
+    common = json.loads(
+        (ROOT / "src/actools/contracts/schemas/common-1.0.0.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    for name in ("identifier", "policyReference", "releaseReference"):
+        pattern = common["$defs"][name]["pattern"]
+        assert "\\Z" not in pattern
+        assert pattern.endswith(r"(?![\s\S])")
+
+@pytest.mark.parametrize("syntax", ["json", "yaml"])
+def test_ir02_normal_owned_ids_and_references_still_validate(syntax: str) -> None:
+    resolved = load_configuration(_encoded_document(minimal(), syntax), syntax=syntax)
+    assert resolved.configuration["installation"]["id"] == "install-main"
+    assert resolved.configuration["references"]["policy"].endswith("/1.0.0")
+
+
+@pytest.mark.parametrize(
+    "port_text,valid",
+    [
+        ("0", False),
+        ("1", True),
+        ("65535", True),
+        ("65536", False),
+        ("100000", False),
+        ("01", False),
+        ("١", False),
+        ("9" * 4301, False),
+        ("9" * 10000, False),
+    ],
+)
+def test_ir03_endpoint_predicate_is_total_for_extreme_ports(
+    port_text: str, valid: bool
+) -> None:
+    from actools.contracts.configuration import _is_endpoint
+
+    assert _is_endpoint("127.0.0.1:" + port_text) is valid
+
+
+@pytest.mark.parametrize("syntax", ["json", "yaml"])
+@pytest.mark.parametrize(
+    "port_text",
+    ["0", "65536", "100000", "01", "١", "9" * 4301, "9" * 10000],
+)
+def test_ir03_invalid_ports_fail_with_owned_bounded_configuration_error(
+    syntax: str, port_text: str
+) -> None:
+    value = minimal()
+    endpoint = "127.0.0.1:" + port_text
+    value["host"]["management_endpoint"] = endpoint
+    with pytest.raises(ConfigurationError) as exc:
+        load_configuration(_encoded_document(value, syntax), syntax=syntax)
+    assert exc.value.path == "/host/management_endpoint"
+    assert exc.value.reason in {"invalid_format", "value_out_of_range"}
+    assert endpoint not in str(exc.value)
+    assert len(str(exc.value)) < 160
+
+
+@pytest.mark.parametrize("syntax", ["json", "yaml"])
+@pytest.mark.parametrize("port_text", ["1", "65535"])
+def test_ir03_port_boundaries_remain_valid(syntax: str, port_text: str) -> None:
+    value = minimal()
+    value["host"]["management_endpoint"] = "127.0.0.1:" + port_text
+    resolved = load_configuration(_encoded_document(value, syntax), syntax=syntax)
+    assert resolved.configuration["host"]["management_endpoint"].endswith(
+        ":" + port_text
+    )
+
+
+def _pyyaml_plain_resolver_tags(text: str) -> set[str]:
+    # Test oracle only. Production scalar meaning stays in _plain_yaml_scalar().
+    from yaml.resolver import Resolver
+
+    candidates = list(Resolver.yaml_implicit_resolvers.get(text[0], []))
+    candidates.extend(Resolver.yaml_implicit_resolvers.get(None, []))
+    return {tag for tag, pattern in candidates if pattern.match(text)}
+
+
+@pytest.mark.parametrize(
+    "scalar,reason,oracle_tag",
+    [
+        ("1.e+2", "yaml_numeric_extension", "tag:yaml.org,2002:float"),
+        ("1.e-2", "yaml_numeric_extension", "tag:yaml.org,2002:float"),
+        ("+1.e+2", "yaml_numeric_extension", "tag:yaml.org,2002:float"),
+        ("-1.e+2", "yaml_numeric_extension", "tag:yaml.org,2002:float"),
+        ("+1.e-2", "yaml_numeric_extension", "tag:yaml.org,2002:float"),
+        ("-1.e-2", "yaml_numeric_extension", "tag:yaml.org,2002:float"),
+        ("2026-9-11T12:00:00Z", "yaml_ambiguous_scalar", "tag:yaml.org,2002:timestamp"),
+        ("2026-09-1T12:00:00Z", "yaml_ambiguous_scalar", "tag:yaml.org,2002:timestamp"),
+        ("2026-9-1T12:00:00Z", "yaml_ambiguous_scalar", "tag:yaml.org,2002:timestamp"),
+    ],
+)
+def test_ir04_pyyaml_ambiguity_oracle_is_rejected_but_quoted_form_is_string(
+    scalar: str, reason: str, oracle_tag: str
+) -> None:
+    assert oracle_tag in _pyyaml_plain_resolver_tags(scalar)
+    with pytest.raises(ConfigurationError) as exc:
+        parse_yaml_bytes(f"value: {scalar}\n".encode("utf-8"))
+    assert exc.value.reason == reason
+    quoted = json.dumps(scalar).encode("utf-8")
+    assert parse_yaml_bytes(b"value: " + quoted + b"\n") == {"value": scalar}
+
+
+def _nested_list(levels: int) -> object:
+    value: object = 0
+    for _ in range(levels):
+        value = [value]
+    return value
+
+
+def test_ir05_direct_mapping_depth_is_checked_before_recursive_copy() -> None:
+    boundary = minimal()
+    boundary["unexpected"] = _nested_list(31)
+    with pytest.raises(ConfigurationError) as exc:
+        resolve_configuration(boundary)
+    assert exc.value.reason == "unknown_property"
+    assert "platform" not in boundary
+
+    over_limit = minimal()
+    deep_value = _nested_list(32)
+    over_limit["unexpected"] = deep_value
+    with pytest.raises(ConfigurationError) as exc:
+        resolve_configuration(over_limit)
+    assert exc.value.reason == "container_depth_limit"
+    assert over_limit["unexpected"] is deep_value
+    assert "platform" not in over_limit
+
+    far_over_limit = minimal()
+    far_deep_value = _nested_list(1500)
+    far_over_limit["unexpected"] = far_deep_value
+    with pytest.raises(ConfigurationError) as exc:
+        resolve_configuration(far_over_limit)
+    assert exc.value.reason == "container_depth_limit"
+    assert far_over_limit["unexpected"] is far_deep_value
+    assert "platform" not in far_over_limit
+
+
+def test_ir05_direct_mapping_cycle_fails_owned_without_mutation() -> None:
+    cyclic: list[object] = []
+    cyclic.append(cyclic)
+    value = minimal()
+    value["unexpected"] = cyclic
+    with pytest.raises(ConfigurationError) as exc:
+        resolve_configuration(value)
+    assert exc.value.reason == "container_depth_limit"
+    assert value["unexpected"] is cyclic
+    assert cyclic[0] is cyclic
+    assert "platform" not in value
+
+
+def test_ir04_non_resolved_one_digit_plain_date_remains_ordinary_text() -> None:
+    scalar = "2026-9-11"
+    assert _pyyaml_plain_resolver_tags(scalar) == set()
+    assert parse_yaml_bytes(f"value: {scalar}\n".encode("utf-8")) == {"value": scalar}

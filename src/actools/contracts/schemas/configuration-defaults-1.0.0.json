@@ -1,0 +1,15 @@
+{
+  "schema_version":"1.0.0","profile":"single-site-production","default_set":"configuration-defaults-1.0.0","default_set_version":"1.0.0",
+  "defaults": {
+    "/capabilities/selected_ids":[],
+    "/drupal/cache/mode":"database","/drupal/ingress/mode":"direct-caddy","/drupal/storage/private":"local","/drupal/storage/public":"local",
+    "/environment/type":"production",
+    "/host/access/editor":"https-mfa-limited-role","/host/access/linux_administration":"wireguard-ssh-keys","/host/access/privileged_drupal":"vpn-mfa",
+    "/monitoring/deep_diagnostic_interval_days":7,"/monitoring/health_interval_minutes":5,
+    "/monitoring/notifications/email/enabled":false,"/monitoring/notifications/email/secret_ref":null,
+    "/monitoring/notifications/telegram/enabled":false,"/monitoring/notifications/telegram/secret_ref":null,
+    "/monitoring/security_audit_interval_hours":24,
+    "/platform/os_profile":"ubuntu-26.04-amd64","/platform/runtime_backend":"docker-compose",
+    "/recovery/rpo_minutes":60,"/recovery/rto_minutes":240
+  }
+}

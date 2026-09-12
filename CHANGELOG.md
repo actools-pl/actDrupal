@@ -4,14 +4,22 @@
 
 ### Added
 
-- CP-001 development package skeleton for the fresh-install rewrite, with no runtime dependencies.
-- Truthful `actools version [--format human|json]`, controlled help delivery and bounded non-reflective exit-3 invocation errors; no installer or future command stubs are exposed.
-- Narrow `Source CI` workflow and canonical source checker with exact workflow-shape enforcement, pinned action identities, hash-locked tooling input, complete scanner-coverage policy, closed wheel shape, installed-launcher/import-origin checks and reason-bound negative fixtures.
-- Root license/notices, contributor/agent/security guidance and the initial package/source-CI ADR.
+- CP-001 development package skeleton for the fresh-install rewrite and truthful `actools version`/help/error behavior.
+- CP-001 narrow `Source CI` workflow and canonical fail-closed source checker with immutable action pins, locked tooling, complete scanner-coverage policy, closed wheel shape and installed-launcher checks.
+- CP-002 configuration contract `1.0.0` for the `single-site-production` profile, with Draft 2020-12 schemas, strict UTF-8 JSON and restricted Actools YAML parsing, finite resource limits, explicit semantic checks and non-reflective errors.
+- CP-002 omission-only canonical defaults with deterministic JSON-Pointer origin records using only `operator` and `release_default`.
+- CP-002 RFC 8785 canonical bytes for resolved configuration and resolution envelopes, with six pinned Apache-2.0 JCS conformance-vector pairs and recorded provenance.
+
+### Changed
+
+- The Python distribution now declares exactly three runtime dependencies: `PyYAML==6.0.3`, `jsonschema==4.26.0`, and `rfc8785==0.1.4`.
+- Source/package checks now expect the `actools.contracts` subpackage and its three packaged JSON contract resources, and installed-wheel verification uses a fresh isolated venv whose dependency closure is hash-installed from the actual generated `requirements/ci.lock` before the candidate wheel is installed with dependency resolution disabled; lock verification also fails closed unless the generated header records the exact accepted normalized compile command without `--no-index` and the frozen dependency/hash body is unchanged. The exact CP-001 CLI and unchanged Source CI workflow authority are preserved.
+- CP-002 strict validation now rejects scoped/control-bearing endpoints, requires true end-of-input for owned identifiers/references, keeps endpoint port parsing total under extreme input, closes the reviewed YAML implicit-type lexical gaps, and enforces direct-mapping depth limits before recursive copying.
 
 ### Known limits
 
-- This is a development skeleton, not a working Drupal installer or release.
-- Source CI is configured by this candidate but has not run on GitHub before publication.
-- The CP-001 lock must be regenerated/compared with the declared pip-tools/Python environment before remote publication because the coordinator build environment could not reach the package index.
-- No CP-001 result qualifies servers, Drupal behavior, restore, signing, release or product-wide security gates.
+- This remains a development package, not a working Drupal installer or production-qualified release.
+- CP-002 introduces no CLI configuration command, wizard, filesystem publication, host discovery, journal, plan/apply operation, privileged execution, secret loading/generation or network/server effect.
+- The historical r2 coding delivery omitted `requirements/ci.lock` by design. Every CP-002 review candidate must instead contain a resolver-generated lock and retained Human-Git receipts from the accepted Ubuntu Server 26.04.1 / CPython 3.14.7 / pip 26.2.1 / pip-tools 7.6.1 contract. A correction coding environment that cannot reproduce that environment must leave lock regeneration to Human-Git rather than fabricate or hand-edit it.
+- JCS vector SHA-256 values in provenance require independent Human-Git receipt recomputation before the final candidate review.
+- No CP-002 result by itself qualifies servers, Drupal behavior, restore, signing, release support or any product-wide gate.

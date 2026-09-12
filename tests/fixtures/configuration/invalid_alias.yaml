@@ -1,0 +1,5 @@
+schema_version: 1.0.0
+profile: single-site-production
+installation: &install
+  id: install-main
+site: *install

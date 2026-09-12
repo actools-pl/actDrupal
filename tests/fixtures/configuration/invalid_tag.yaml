@@ -1,0 +1,2 @@
+schema_version: 1.0.0
+profile: !!str single-site-production

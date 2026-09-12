@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.actools.invalid/configuration-1.0.0.schema.json",
+  "title": "Actools ready configuration 1.0.0",
+  "$defs": {
+    "notificationChannel": {
+      "type":"object","additionalProperties":false,"required":["enabled","secret_ref"],
+      "properties":{"enabled":{"type":"boolean"},"secret_ref":{"oneOf":[{"type":"null"},{"$ref":"common-1.0.0.schema.json#/$defs/secretReference"}]}}
+    }
+  },
+  "type":"object","additionalProperties":false,
+  "required":["schema_version","profile","installation","site","environment","platform","capabilities","host","drupal","recovery","monitoring","secrets","references"],
+  "properties": {
+    "schema_version":{"const":"1.0.0"},
+    "profile":{"const":"single-site-production"},
+    "installation":{"type":"object","additionalProperties":false,"required":["id"],"properties":{"id":{"$ref":"common-1.0.0.schema.json#/$defs/identifier"}}},
+    "site":{"type":"object","additionalProperties":false,"required":["id","domain"],"properties":{"id":{"$ref":"common-1.0.0.schema.json#/$defs/identifier"},"domain":{"$ref":"common-1.0.0.schema.json#/$defs/domain"}}},
+    "environment":{"type":"object","additionalProperties":false,"required":["id","type"],"properties":{"id":{"$ref":"common-1.0.0.schema.json#/$defs/identifier"},"type":{"const":"production"}}},
+    "platform":{"type":"object","additionalProperties":false,"required":["os_profile","runtime_backend"],"properties":{"os_profile":{"const":"ubuntu-26.04-amd64"},"runtime_backend":{"const":"docker-compose"}}},
+    "capabilities":{"type":"object","additionalProperties":false,"required":["selected_ids"],"properties":{"selected_ids":{"type":"array","maxItems":2,"uniqueItems":true,"items":{"enum":["valkey-cache","cloudflare-standard-proxy"]}}}},
+    "host":{"type":"object","additionalProperties":false,"required":["management_endpoint","filesystem_authority_id","access"],"properties":{
+      "management_endpoint":{"$ref":"common-1.0.0.schema.json#/$defs/endpoint"},"filesystem_authority_id":{"$ref":"common-1.0.0.schema.json#/$defs/filesystemAuthorityId"},
+      "access":{"type":"object","additionalProperties":false,"required":["linux_administration","privileged_drupal","editor"],"properties":{"linux_administration":{"const":"wireguard-ssh-keys"},"privileged_drupal":{"const":"vpn-mfa"},"editor":{"const":"https-mfa-limited-role"}}}
+    }},
+    "drupal":{"type":"object","additionalProperties":false,"required":["storage","cache","ingress"],"properties":{
+      "storage":{"type":"object","additionalProperties":false,"required":["public","private"],"properties":{"public":{"const":"local"},"private":{"const":"local"}}},
+      "cache":{"type":"object","additionalProperties":false,"required":["mode"],"properties":{"mode":{"enum":["database","valkey"]}}},
+      "ingress":{"type":"object","additionalProperties":false,"required":["mode"],"properties":{"mode":{"enum":["direct-caddy","cloudflare-standard"]}}}
+    }},
+    "recovery":{"type":"object","additionalProperties":false,"required":["rpo_minutes","rto_minutes"],"properties":{"rpo_minutes":{"type":"integer","minimum":1,"maximum":60},"rto_minutes":{"type":"integer","minimum":1,"maximum":240}}},
+    "monitoring":{"type":"object","additionalProperties":false,"required":["health_interval_minutes","security_audit_interval_hours","deep_diagnostic_interval_days","notifications"],"properties":{
+      "health_interval_minutes":{"type":"integer","const":5},"security_audit_interval_hours":{"type":"integer","const":24},"deep_diagnostic_interval_days":{"type":"integer","const":7},
+      "notifications":{"type":"object","additionalProperties":false,"required":["email","telegram"],"properties":{"email":{"$ref":"#/$defs/notificationChannel"},"telegram":{"$ref":"#/$defs/notificationChannel"}}}
+    }},
+    "secrets":{"type":"object","additionalProperties":false,"required":["database_credentials"],"properties":{"database_credentials":{"$ref":"common-1.0.0.schema.json#/$defs/secretReference"}}},
+    "references":{"type":"object","additionalProperties":false,"required":["policy","release"],"properties":{"policy":{"$ref":"common-1.0.0.schema.json#/$defs/policyReference"},"release":{"$ref":"common-1.0.0.schema.json#/$defs/releaseReference"}}}
+  }
+}

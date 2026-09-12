@@ -664,3 +664,58 @@ def test_ir04_non_resolved_one_digit_plain_date_remains_ordinary_text() -> None:
     scalar = "2026-9-11"
     assert _pyyaml_plain_resolver_tags(scalar) == set()
     assert parse_yaml_bytes(f"value: {scalar}\n".encode("utf-8")) == {"value": scalar}
+
+@pytest.mark.parametrize(
+    "scalar",
+    [
+        "2026-9-11TBD",
+        "2026-9-11 Tomorrow",
+        "2026-9-11T12:00:00Z-notes",
+        "2026-9-11",
+        "1.0.0",
+    ],
+)
+def test_ir1_01_safe_date_prefixed_plain_text_remains_exact_string(scalar: str) -> None:
+    assert _pyyaml_plain_resolver_tags(scalar) == set()
+    assert parse_yaml_bytes(f"value: {scalar}\n".encode("utf-8")) == {"value": scalar}
+    quoted = json.dumps(scalar).encode("utf-8")
+    assert parse_yaml_bytes(b"value: " + quoted + b"\n") == {"value": scalar}
+
+
+@pytest.mark.parametrize(
+    "scalar",
+    [
+        "2026-9-11T12:00:00Z",
+        "2026-09-1T12:00:00Z",
+        "2026-9-1T12:00:00Z",
+        "2026-9-11t12:00:00Z",
+        "2026-9-11 12:00:00Z",
+    ],
+)
+def test_ir1_01_true_timestamp_ambiguity_remains_rejected(scalar: str) -> None:
+    assert "tag:yaml.org,2002:timestamp" in _pyyaml_plain_resolver_tags(scalar)
+    with pytest.raises(ConfigurationError) as exc:
+        parse_yaml_bytes(f"value: {scalar}\n".encode("utf-8"))
+    assert exc.value.reason == "yaml_ambiguous_scalar"
+    quoted = json.dumps(scalar).encode("utf-8")
+    assert parse_yaml_bytes(b"value: " + quoted + b"\n") == {"value": scalar}
+
+@pytest.mark.parametrize(
+    "scalar,expected",
+    [
+        ("0", 0),
+        ("-0", 0),
+        ("0.0", 0.0),
+        ("-0.1", -0.1),
+        ("0e0", 0.0),
+        ("0E+2", 0.0),
+        ("1E-3", 0.001),
+        ("-1.5e-2", -0.015),
+    ],
+)
+def test_ir1_01_supported_json_number_lexemes_remain_supported(
+    scalar: str, expected: int | float
+) -> None:
+    assert parse_yaml_bytes(f"value: {scalar}\n".encode("utf-8")) == {
+        "value": expected
+    }

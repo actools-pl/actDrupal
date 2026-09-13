@@ -843,6 +843,11 @@ _INCOMPLETE_EVIDENCE_STATES = {
     EvidenceState.UNSUPPORTED.value,
     EvidenceState.INCONCLUSIVE.value,
 }
+_SKIPPED_EVIDENCE_FINAL_STATES = {
+    FindingStatus.SKIPPED.value,
+    # The evaluator below admits UNKNOWN only for an unsatisfied prerequisite.
+    FindingStatus.UNKNOWN.value,
+}
 
 
 def _validate_diagnostic_semantics(document: Mapping[str, Any]) -> None:
@@ -888,7 +893,8 @@ def _validate_diagnostic_semantics(document: Mapping[str, Any]) -> None:
                 "diagnostic-evidence", path, "missing_evidence_cannot_pass"
             )
         if evidence_state == EvidenceState.SKIPPED.value and (
-            status != FindingStatus.SKIPPED.value or observed_status is not None
+            status not in _SKIPPED_EVIDENCE_FINAL_STATES
+            or observed_status is not None
         ):
             raise ContractError(
                 "diagnostic-evidence", path, "skipped_evidence_status_mismatch"

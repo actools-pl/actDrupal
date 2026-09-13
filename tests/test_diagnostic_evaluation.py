@@ -422,6 +422,360 @@ def test_failed_prerequisite_makes_dependent_unknown_without_stopping_peers() ->
     assert exc.value.reason == "finding_prerequisite_outcome_mismatch"
 
 
+def test_skipped_dependent_round_trips_dependency_adjusted_unknown() -> None:
+    controls = (
+        _control(
+            "control-prerequisite",
+            observed_status=FindingStatus.FAIL,
+            severity=Severity.HIGH,
+            required=False,
+        ),
+        _control(
+            "control-dependent",
+            evidence_state=EvidenceState.SKIPPED,
+            observed_status=None,
+            prerequisite_ids=("control-prerequisite",),
+        ),
+        _control("control-independent"),
+    )
+    result = evaluate_diagnostics(controls, policy_id="community-baseline")
+    findings = {item.control_id: item for item in result.findings}
+    dependent = findings["control-dependent"]
+
+    assert dependent.evidence_state == EvidenceState.SKIPPED
+    assert dependent.observed_id is None
+    assert dependent.observed_status is None
+    assert dependent.status == FindingStatus.UNKNOWN
+    assert dependent.blocking is False
+    assert dependent.error_ids == ("prerequisite-not-satisfied",)
+    assert dependent.gate_impact == GateImpact.DOES_NOT_BLOCK
+    assert result.coverage.selected.numerator == 2
+    assert result.coverage.selected.denominator == 3
+    assert result.coverage.selected.gap_ids == ("control-dependent",)
+    assert result.coverage.full_required_policy.numerator == 1
+    assert result.coverage.full_required_policy.denominator == 2
+    assert result.coverage.full_required_policy.gap_ids == (
+        "control-dependent",
+    )
+    assert result.run_state == RunState.PARTIAL
+    assert result.gate.gate_state == GateState.BLOCKED
+    assert result.gate.blocking_finding_ids == ()
+    assert result.gate.coverage_gap_ids == ("control-dependent",)
+    assert result.exit_code == 2
+
+    document = _serialized_result(result, controls)
+    validated = validate_contract_document("diagnostic-evidence", document)
+    assert isinstance(validated, DiagnosticEvidence)
+    assert to_primitive(validated) == document
+
+
+@pytest.mark.parametrize(
+    (
+        "prerequisite_evidence",
+        "prerequisite_observation",
+        "prerequisite_severity",
+        "prerequisite_status",
+        "selected_numerator",
+    ),
+    [
+        (
+            EvidenceState.VALID,
+            FindingStatus.WARN,
+            Severity.MEDIUM,
+            FindingStatus.WARN,
+            2,
+        ),
+        (
+            EvidenceState.MISSING,
+            None,
+            Severity.MEDIUM,
+            FindingStatus.UNKNOWN,
+            1,
+        ),
+        (
+            EvidenceState.SKIPPED,
+            None,
+            Severity.INFO,
+            FindingStatus.SKIPPED,
+            1,
+        ),
+    ],
+)
+def test_skipped_dependent_round_trips_other_unsatisfied_prerequisites(
+    prerequisite_evidence: EvidenceState,
+    prerequisite_observation: FindingStatus | None,
+    prerequisite_severity: Severity,
+    prerequisite_status: FindingStatus,
+    selected_numerator: int,
+) -> None:
+    controls = (
+        _control(
+            "control-prerequisite",
+            evidence_state=prerequisite_evidence,
+            observed_status=prerequisite_observation,
+            severity=prerequisite_severity,
+            required=False,
+        ),
+        _control(
+            "control-dependent",
+            evidence_state=EvidenceState.SKIPPED,
+            observed_status=None,
+            prerequisite_ids=("control-prerequisite",),
+        ),
+        _control("control-independent"),
+    )
+    first = evaluate_diagnostics(controls, policy_id="community-baseline")
+    second = evaluate_diagnostics(
+        tuple(reversed(controls)), policy_id="community-baseline"
+    )
+    assert first == second
+    findings = {item.control_id: item for item in first.findings}
+    assert findings["control-prerequisite"].status == prerequisite_status
+    assert findings["control-dependent"].status == FindingStatus.UNKNOWN
+    assert findings["control-dependent"].evidence_state == EvidenceState.SKIPPED
+    assert findings["control-dependent"].observed_id is None
+    assert findings["control-dependent"].observed_status is None
+    assert findings["control-dependent"].error_ids == (
+        "prerequisite-not-satisfied",
+    )
+    assert first.coverage.selected.numerator == selected_numerator
+    assert first.coverage.selected.denominator == 3
+    assert first.coverage.full_required_policy.numerator == 1
+    assert first.coverage.full_required_policy.denominator == 2
+    assert first.coverage.full_required_policy.gap_ids == (
+        "control-dependent",
+    )
+    assert first.gate.gate_state == GateState.BLOCKED
+    assert first.exit_code == 2
+    validate_contract_document(
+        "diagnostic-evidence", _serialized_result(first, controls)
+    )
+
+
+def test_skipped_multilevel_dependency_chain_round_trips_in_any_order() -> None:
+    controls = (
+        _control(
+            "control-root",
+            evidence_state=EvidenceState.MISSING,
+            observed_status=None,
+            severity=Severity.MEDIUM,
+            required=False,
+        ),
+        _control(
+            "control-middle",
+            evidence_state=EvidenceState.SKIPPED,
+            observed_status=None,
+            required=False,
+            prerequisite_ids=("control-root",),
+        ),
+        _control(
+            "control-leaf",
+            evidence_state=EvidenceState.SKIPPED,
+            observed_status=None,
+            prerequisite_ids=("control-middle",),
+        ),
+        _control("control-independent"),
+    )
+    first = evaluate_diagnostics(controls, policy_id="community-baseline")
+    second = evaluate_diagnostics(
+        tuple(reversed(controls)), policy_id="community-baseline"
+    )
+    assert first == second
+    findings = {item.control_id: item for item in first.findings}
+    assert findings["control-root"].status == FindingStatus.UNKNOWN
+    assert findings["control-middle"].status == FindingStatus.UNKNOWN
+    assert findings["control-leaf"].status == FindingStatus.UNKNOWN
+    assert findings["control-independent"].status == FindingStatus.PASS
+    assert first.coverage.selected.numerator == 1
+    assert first.coverage.selected.denominator == 4
+    assert first.coverage.selected.gap_ids == (
+        "control-leaf",
+        "control-middle",
+        "control-root",
+    )
+    assert first.coverage.full_required_policy.numerator == 1
+    assert first.coverage.full_required_policy.denominator == 2
+    assert first.coverage.full_required_policy.gap_ids == ("control-leaf",)
+    assert first.exit_code == 2
+    validate_contract_document(
+        "diagnostic-evidence", _serialized_result(first, controls)
+    )
+
+
+@pytest.mark.parametrize("prerequisite_case", ["none", "pass", "not-applicable"])
+def test_skipped_control_stays_skipped_when_prerequisites_are_satisfied(
+    prerequisite_case: str,
+) -> None:
+    prerequisite: tuple[ControlEvaluationInput, ...]
+    prerequisite_ids: tuple[str, ...]
+    if prerequisite_case == "none":
+        prerequisite = ()
+        prerequisite_ids = ()
+    elif prerequisite_case == "pass":
+        prerequisite = (_control("control-prerequisite", required=False),)
+        prerequisite_ids = ("control-prerequisite",)
+    else:
+        prerequisite = (
+            _control(
+                "control-prerequisite",
+                evidence_state=EvidenceState.NOT_APPLICABLE_PROVEN,
+                observed_status=None,
+                required=False,
+                applicable=False,
+            ),
+        )
+        prerequisite_ids = ("control-prerequisite",)
+
+    controls = (
+        *prerequisite,
+        _control(
+            "control-dependent",
+            evidence_state=EvidenceState.SKIPPED,
+            observed_status=None,
+            prerequisite_ids=prerequisite_ids,
+        ),
+        _control("control-independent"),
+    )
+    result = evaluate_diagnostics(controls, policy_id="community-baseline")
+    dependent = next(
+        item for item in result.findings if item.control_id == "control-dependent"
+    )
+    assert dependent.status == FindingStatus.SKIPPED
+    assert dependent.error_ids == ()
+    assert result.exit_code == 2
+    document = _serialized_result(result, controls)
+    validate_contract_document("diagnostic-evidence", document)
+
+    forged_unknown = copy.deepcopy(document)
+    dependent = next(
+        item
+        for item in forged_unknown["findings"]
+        if item["control_id"] == "control-dependent"
+    )
+    dependent["status"] = "UNKNOWN"
+    with pytest.raises(ContractError):
+        validate_contract_document("diagnostic-evidence", forged_unknown)
+
+
+def test_skipped_dependency_adjustment_rejects_forged_serialized_outcomes() -> None:
+    controls = (
+        _control(
+            "control-prerequisite",
+            observed_status=FindingStatus.FAIL,
+            severity=Severity.HIGH,
+            required=False,
+        ),
+        _control(
+            "control-dependent",
+            evidence_state=EvidenceState.SKIPPED,
+            observed_status=None,
+            prerequisite_ids=("control-prerequisite",),
+        ),
+        _control("control-independent"),
+    )
+    result = evaluate_diagnostics(controls, policy_id="community-baseline")
+    document = _serialized_result(result, controls)
+
+    forged_status = copy.deepcopy(document)
+    dependent = next(
+        item
+        for item in forged_status["findings"]
+        if item["control_id"] == "control-dependent"
+    )
+    dependent["status"] = "SKIPPED"
+    with pytest.raises(ContractError) as exc:
+        validate_contract_document("diagnostic-evidence", forged_status)
+    assert exc.value.reason == "finding_prerequisite_outcome_mismatch"
+
+    forged_pass = copy.deepcopy(document)
+    dependent = next(
+        item
+        for item in forged_pass["findings"]
+        if item["control_id"] == "control-dependent"
+    )
+    dependent["status"] = "PASS"
+    with pytest.raises(ContractError) as exc:
+        validate_contract_document("diagnostic-evidence", forged_pass)
+    assert exc.value.reason == "skipped_evidence_status_mismatch"
+
+    forged_marker = copy.deepcopy(document)
+    dependent = next(
+        item
+        for item in forged_marker["findings"]
+        if item["control_id"] == "control-dependent"
+    )
+    dependent["error_ids"] = []
+    with pytest.raises(ContractError) as exc:
+        validate_contract_document("diagnostic-evidence", forged_marker)
+    assert exc.value.reason == "finding_prerequisite_outcome_mismatch"
+
+    forged_coverage = copy.deepcopy(document)
+    forged_coverage["coverage"]["selected"].update(
+        {"numerator": 3, "gap_ids": []}
+    )
+    with pytest.raises(ContractError) as exc:
+        validate_contract_document("diagnostic-evidence", forged_coverage)
+    assert exc.value.reason == "coverage_gap_inventory_mismatch"
+
+    forged_gate = copy.deepcopy(document)
+    forged_gate["gates"][0].update(
+        {"gate_state": "pass", "coverage_gap_ids": []}
+    )
+    with pytest.raises(ContractError) as exc:
+        validate_contract_document("diagnostic-evidence", forged_gate)
+    assert exc.value.reason == "gate_disposition_mismatch"
+
+    invented_observation = copy.deepcopy(document)
+    dependent = next(
+        item
+        for item in invented_observation["findings"]
+        if item["control_id"] == "control-dependent"
+    )
+    dependent.update(
+        {
+            "observed_id": "observed-control-dependent",
+            "observed_status": "PASS",
+        }
+    )
+    with pytest.raises(ContractError) as exc:
+        validate_contract_document("diagnostic-evidence", invented_observation)
+    assert exc.value.reason == "skipped_evidence_status_mismatch"
+
+
+def test_coverage_gap_exit_precedes_preserved_factual_blocker() -> None:
+    controls = (
+        _control(
+            "control-prerequisite",
+            observed_status=FindingStatus.FAIL,
+            severity=Severity.HIGH,
+            required=False,
+        ),
+        _control(
+            "control-dependent",
+            evidence_state=EvidenceState.SKIPPED,
+            observed_status=None,
+            prerequisite_ids=("control-prerequisite",),
+        ),
+        _control(
+            "control-blocker",
+            observed_status=FindingStatus.FAIL,
+            severity=Severity.CRITICAL,
+            blocking=True,
+        ),
+    )
+    result = evaluate_diagnostics(controls, policy_id="community-baseline")
+    assert result.coverage.full_required_policy.gap_ids == (
+        "control-dependent",
+    )
+    assert result.gate.blocking_finding_ids == ("control-blocker",)
+    assert result.gate.coverage_gap_ids == ("control-dependent",)
+    assert result.gate.gate_state == GateState.BLOCKED
+    assert result.exit_code == 2
+    validate_contract_document(
+        "diagnostic-evidence", _serialized_result(result, controls)
+    )
+
+
 def test_missing_prerequisite_also_makes_the_dependent_unknown() -> None:
     controls = (
         _control(

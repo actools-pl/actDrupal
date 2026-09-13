@@ -24,10 +24,18 @@
   "intent_at": "2026-09-13T10:02:01Z",
   "attempts": [
     {
+      "attempt_id": "attempt-publish-initial",
+      "effect_id": "effect-publish-generation",
+      "state": "failed",
+      "started_at": "2026-09-13T10:02:02Z",
+      "finished_at": "2026-09-13T10:02:05Z",
+      "deadline_at": "2026-09-13T10:04:00Z"
+    },
+    {
       "attempt_id": "attempt-publish-001",
       "effect_id": "effect-publish-generation",
       "state": "succeeded",
-      "started_at": "2026-09-13T10:02:02Z",
+      "started_at": "2026-09-13T10:02:06Z",
       "finished_at": "2026-09-13T10:02:12Z",
       "deadline_at": "2026-09-13T10:04:00Z"
     }

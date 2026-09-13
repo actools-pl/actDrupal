@@ -4,6 +4,8 @@ from .canonical import canonical_json_bytes
 from .catalog import (
     canonical_contract_bytes,
     canonical_contract_digest,
+    canonical_plan_payload_bytes,
+    canonical_plan_payload_digest,
     load_contract_catalog,
     load_packaged_contract,
     parse_contract_bytes,
@@ -41,6 +43,7 @@ from .evaluation import (
 from .graph import EXPECTED_COUNTS, EXPECTED_NODE_IDS, validate_requirement_graph
 from .models import (
     BackupSet,
+    BackupTransport,
     CommandResult,
     ContractCatalog,
     DiagnosticEvidence,
@@ -70,6 +73,7 @@ __all__ = [
     "ReleaseManifest",
     "DiagnosticEvidence",
     "BackupSet",
+    "BackupTransport",
     "CommandResult",
     "ControlEvaluationInput",
     "DiagnosticEvaluation",
@@ -79,6 +83,8 @@ __all__ = [
     "canonical_json_bytes",
     "canonical_contract_bytes",
     "canonical_contract_digest",
+    "canonical_plan_payload_bytes",
+    "canonical_plan_payload_digest",
     "assert_schema_quality",
     "parse_json_bytes",
     "parse_yaml_bytes",

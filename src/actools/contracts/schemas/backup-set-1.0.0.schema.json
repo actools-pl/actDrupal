@@ -113,7 +113,7 @@
       "properties": {
         "repository_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
         "snapshot_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
-        "transport": {"enum": ["restic-local", "restic-sftp", "restic-s3"]},
+        "transport": {"const": "restic-rest"},
         "availability_verified_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"}
       }
     },

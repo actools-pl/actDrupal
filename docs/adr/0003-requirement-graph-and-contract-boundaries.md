@@ -58,6 +58,11 @@ unowned nodes, wrong ID/kind relationships, falsely implemented deferred scope,
 evidence-free PASS, and support claims that are not implemented, evidenced,
 fully mapped, and profile-qualified.
 
+The canonical graph additionally binds worker gates G11–G13 and PITR gate G17 to
+their conditional `future-decision` feature scope. It keeps the current backup and
+restore gates G14–G16 unconditionally applicable. A deferred feature therefore
+cannot become a current-profile obligation merely because its gate exists.
+
 The graph and the coding ledger have different authority:
 
 - the graph owns product requirement/capability meaning and support truth;
@@ -70,15 +75,25 @@ The graph and the coding ledger have different authority:
 - A plan contains exact request/action identity, actor requirements, protected
   resources, target, fingerprints and generations, validity times, context
   digests, effects, disruption, checks, recovery, irreversible boundaries, and
-  review identity. It contains no command text or executable payload.
+  review identity. It contains no command text or executable payload. Its review
+  binds the RFC 8785 digest of every plan field except the review receipt itself,
+  eliminating a circular self-hash while retaining every significant target,
+  authority, effect and state field.
 - An operation journal is written by the future protected engine and records
   intent, actor, locks, generations, attempts, deadlines, handler,
-  postconditions, evidence, error, reconciliation, and cleanup.
+  postconditions, evidence, error, reconciliation, and cleanup. Succeeded required
+  postconditions resolve to unique journal evidence records; a success label alone
+  is insufficient.
 - A diagnostic-evidence document separates collection attempts, factual finding
-  status, severity, run state, selected coverage, full required-policy coverage,
-  gate disposition, effects/cleanup, and provenance.
+  observation/status, severity, run state, selected coverage, full required-policy
+  coverage, gate disposition, effects/cleanup, and provenance. Dependency
+  resolution can make the final status UNKNOWN without deleting valid raw
+  observation facts.
 - A backup set separates constituent/commit checks from the later restore proof.
-  `committed` requires every required constituent receipt and all commit checks;
+  `committed` requires the complete owned single-site constituent inventory,
+  digest-verified receipts and successful records for all four commit checks. The
+  selected transport is the independently hosted authenticated-TLS Restic REST
+  boundary; this representation is not backend qualification.
   `restore_proof.status=not-run` remains valid and does not become PASS.
 - A command result contains one structured result, one JSON stdout-document count,
   durable operation outcome, independent delivery status, redacted errors,
@@ -97,6 +112,13 @@ exit precedence `3 > 2 > 1 > 0`. Missing or otherwise incomplete proof cannot
 produce PASS. Optional unknowns can make a run partial without making full
 required-policy coverage incomplete.
 
+The same evaluator semantics validate serialized results. Required blockers
+survive a narrower selection, selected optional blockers are explicit, every gate
+is tied to actual policy evaluation, empty required inventories cannot pass, and
+engine errors force the gate to `not_evaluated`. Prerequisite identifiers form a
+validated acyclic graph; an unsatisfied prerequisite makes its dependent UNKNOWN
+without suppressing independent findings.
+
 Presentation is never an admission source. The admission helper is only a pure
 prerequisite predicate over provenance plus facts established by a future trusted
 evidence reader; it does not authenticate those facts. Exact source and digest,
@@ -107,6 +129,11 @@ the presentation path.
 must carry the same owned `text/html` artifact reference in delivery and
 presentation metadata. An undelivered result cannot claim a published artifact.
 No renderer or publication helper is implemented here.
+
+Packaged schema and policy resources pass through the strict byte, depth, Unicode
+and aggregate-node limits before use. Common-reference expansion has a separate
+finite budget and rejects cycles. The larger reviewed graph keeps its explicit
+32,768-node allowance.
 
 ## Consequences
 

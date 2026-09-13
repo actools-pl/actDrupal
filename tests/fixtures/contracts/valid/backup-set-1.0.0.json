@@ -24,7 +24,7 @@
   "repository": {
     "repository_id": "recovery-repository-alpha",
     "snapshot_id": "restic-snapshot-001",
-    "transport": "restic-sftp",
+    "transport": "restic-rest",
     "availability_verified_at": "2026-09-13T08:06:00Z"
   },
   "encryption": {
@@ -56,6 +56,24 @@
     {"constituent_id": "application-secrets", "receipt_id": "receipt-secrets", "status": "complete", "captured_at": "2026-09-13T08:05:00Z", "digest_verified": true}
   ],
   "verification_results": [
+    {
+      "check_id": "check-constituents-complete",
+      "status": "pass",
+      "verified_at": "2026-09-13T08:06:00Z",
+      "evidence_id": "evidence-constituents-complete"
+    },
+    {
+      "check_id": "check-authenticated-manifest",
+      "status": "pass",
+      "verified_at": "2026-09-13T08:06:00Z",
+      "evidence_id": "evidence-authenticated-manifest"
+    },
+    {
+      "check_id": "check-repository-availability",
+      "status": "pass",
+      "verified_at": "2026-09-13T08:06:00Z",
+      "evidence_id": "evidence-repository-availability"
+    },
     {
       "check_id": "check-repository-snapshot",
       "status": "pass",

@@ -117,6 +117,7 @@
         "prerequisite_ids",
         "expected_id",
         "observed_id",
+        "observed_status",
         "evidence_state",
         "status",
         "severity",
@@ -145,6 +146,12 @@
           "oneOf": [
             {"type": "null"},
             {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+          ]
+        },
+        "observed_status": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["PASS", "FAIL", "WARN"]}
           ]
         },
         "evidence_state": {"enum": ["valid", "missing", "stale", "inaccessible", "malformed", "unsupported", "inconclusive", "skipped", "not-applicable-proven"]},

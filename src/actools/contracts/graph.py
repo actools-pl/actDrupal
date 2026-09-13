@@ -53,6 +53,23 @@ EXPECTED_COUNTS = {
     NodeKind.SECURITY_CASE: 15,
 }
 
+CONDITIONAL_GATE_PARENTS = {
+    "G11": ("F27", "F28", "F29", "F31"),
+    "G12": ("F27", "F28", "F30", "F31"),
+    "G13": ("F28", "F29", "F32"),
+    "G17": ("F42", "F43"),
+}
+DEFERRED_SCOPE_NODE_IDS = (
+    "F28",
+    "F43",
+    "WP16",
+    "WP17",
+    "WP18",
+    "WP19",
+    "WP20",
+)
+MANDATORY_RECOVERY_GATE_IDS = ("G14", "G15", "G16")
+
 
 def _kind_for_id(node_id: str) -> NodeKind | None:
     if node_id.startswith("UXS-C"):
@@ -285,4 +302,37 @@ def validate_requirement_graph(document: Mapping[str, Any]) -> None:
             raise RequirementGraphError(
                 "/expected_counts", "graph_declared_count_mismatch"
             )
+        for node_id in DEFERRED_SCOPE_NODE_IDS:
+            if nodes[node_id]["applicability"]["predicate"] != (
+                ApplicabilityPredicate.FUTURE_DECISION.value
+            ):
+                raise RequirementGraphError(
+                    "/nodes", "graph_deferred_scope_applicability_mismatch"
+                )
+        for gate_id, parent_ids in CONDITIONAL_GATE_PARENTS.items():
+            gate = nodes[gate_id]
+            if (
+                gate["decision_status"] != DecisionStatus.CONDITIONAL.value
+                or gate["applicability"]["predicate"]
+                != ApplicabilityPredicate.FUTURE_DECISION.value
+                or gate["applicability"]["mapping_status"]
+                != MappingStatus.RESOLVED.value
+                or tuple(gate["parent_feature_ids"]) != parent_ids
+                or gate["parent_mapping_status"] != MappingStatus.RESOLVED.value
+            ):
+                raise RequirementGraphError(
+                    "/nodes", "graph_conditional_gate_scope_mismatch"
+                )
+        for gate_id in MANDATORY_RECOVERY_GATE_IDS:
+            gate = nodes[gate_id]
+            if (
+                gate["decision_status"] != DecisionStatus.ACCEPTED.value
+                or gate["applicability"]["predicate"]
+                != ApplicabilityPredicate.ALWAYS.value
+                or gate["applicability"]["mapping_status"]
+                != MappingStatus.RESOLVED.value
+            ):
+                raise RequirementGraphError(
+                    "/nodes", "graph_mandatory_recovery_gate_scope_mismatch"
+                )
     _assert_no_dependency_cycle(nodes)

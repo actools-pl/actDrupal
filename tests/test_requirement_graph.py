@@ -9,8 +9,15 @@ import pytest
 
 from actools.contracts.catalog import load_packaged_contract, parse_contract_bytes
 from actools.contracts.errors import ContractError, RequirementGraphError
-from actools.contracts.graph import EXPECTED_NODE_IDS, validate_requirement_graph
+from actools.contracts.graph import (
+    CONDITIONAL_GATE_PARENTS,
+    DEFERRED_SCOPE_NODE_IDS,
+    EXPECTED_NODE_IDS,
+    MANDATORY_RECOVERY_GATE_IDS,
+    validate_requirement_graph,
+)
 from actools.contracts.models import (
+    ApplicabilityPredicate,
     DecisionStatus,
     ImplementationStatus,
     RequirementGraph,
@@ -85,6 +92,35 @@ def test_unresolved_exact_mappings_are_data_not_false_support() -> None:
             node.contract_mapping.status.value,
         }
     )
+
+
+def test_deferred_worker_and_pitr_gates_share_future_scope() -> None:
+    graph = load_packaged_contract("requirement-graph")
+    by_id = {node.id: node for node in graph.nodes}
+
+    for node_id in DEFERRED_SCOPE_NODE_IDS:
+        assert by_id[node_id].applicability.predicate == (
+            ApplicabilityPredicate.FUTURE_DECISION
+        )
+    for gate_id, parent_ids in CONDITIONAL_GATE_PARENTS.items():
+        gate = by_id[gate_id]
+        assert gate.decision_status == DecisionStatus.CONDITIONAL
+        assert gate.applicability.predicate == ApplicabilityPredicate.FUTURE_DECISION
+        assert gate.parent_feature_ids == parent_ids
+
+    for gate_id in MANDATORY_RECOVERY_GATE_IDS:
+        gate = by_id[gate_id]
+        assert gate.decision_status == DecisionStatus.ACCEPTED
+        assert gate.applicability.predicate == ApplicabilityPredicate.ALWAYS
+
+
+def test_canonical_deferred_gate_cannot_be_made_unconditionally_applicable() -> None:
+    document = _document()
+    gate = next(item for item in document["nodes"] if item["id"] == "G11")
+    gate["applicability"]["predicate"] = "always"
+    with pytest.raises(RequirementGraphError) as exc:
+        validate_requirement_graph(document)
+    assert exc.value.reason == "graph_conditional_gate_scope_mismatch"
 
 
 @pytest.mark.parametrize(

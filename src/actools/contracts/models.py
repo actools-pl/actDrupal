@@ -128,6 +128,10 @@ class BackupCommitStatus(StrEnum):
     FAILED = "failed"
 
 
+class BackupTransport(StrEnum):
+    REST = "restic-rest"
+
+
 class RestoreProofStatus(StrEnum):
     NOT_RUN = "not-run"
     PASS = "pass"
@@ -601,6 +605,7 @@ class Finding:
     prerequisite_ids: tuple[str, ...]
     expected_id: str
     observed_id: str | None
+    observed_status: FindingStatus | None
     evidence_state: EvidenceState
     status: FindingStatus
     severity: Severity
@@ -735,7 +740,7 @@ class BackupConstituent:
 class BackupRepository:
     repository_id: str
     snapshot_id: str
-    transport: str
+    transport: BackupTransport
     availability_verified_at: str
 
 

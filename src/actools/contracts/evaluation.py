@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .errors import EvaluationError
 from .models import (
@@ -70,6 +70,11 @@ _ASSESSED = {
     FindingStatus.FAIL,
     FindingStatus.WARN,
 }
+_SATISFIED_PREREQUISITES = {
+    FindingStatus.PASS,
+    FindingStatus.NOT_APPLICABLE,
+}
+_PREREQUISITE_ERROR_ID = "prerequisite-not-satisfied"
 
 
 def _finding_status(item: ControlEvaluationInput) -> tuple[FindingStatus, bool]:
@@ -108,9 +113,7 @@ def _finding_status(item: ControlEvaluationInput) -> tuple[FindingStatus, bool]:
     return FindingStatus.UNKNOWN, effective_applicable
 
 
-def _coverage(
-    findings: tuple[Finding, ...], *, selected: bool
-) -> Coverage:
+def _coverage(findings: tuple[Finding, ...], *, selected: bool) -> Coverage:
     eligible = tuple(
         item
         for item in findings
@@ -119,6 +122,48 @@ def _coverage(
     assessed = tuple(item for item in eligible if item.status in _ASSESSED)
     gaps = tuple(sorted(item.control_id for item in eligible if item.status not in _ASSESSED))
     return Coverage(len(assessed), len(eligible), gaps)
+
+
+def _dependency_order(
+    controls: tuple[ControlEvaluationInput, ...],
+) -> tuple[ControlEvaluationInput, ...]:
+    by_id = {item.control_id: item for item in controls}
+    for item in controls:
+        prerequisites = item.prerequisite_ids
+        if len(prerequisites) != len(set(prerequisites)):
+            raise EvaluationError("prerequisite identifiers must be unique")
+        if item.control_id in prerequisites:
+            raise EvaluationError("control cannot depend on itself")
+        if any(prerequisite_id not in by_id for prerequisite_id in prerequisites):
+            raise EvaluationError("prerequisite control is unknown")
+
+    state: dict[str, int] = {}
+    ordered: list[ControlEvaluationInput] = []
+
+    def visit(control_id: str) -> None:
+        marker = state.get(control_id, 0)
+        if marker == 1:
+            raise EvaluationError("prerequisite cycle is not permitted")
+        if marker == 2:
+            return
+        state[control_id] = 1
+        item = by_id[control_id]
+        for prerequisite_id in sorted(item.prerequisite_ids):
+            visit(prerequisite_id)
+        state[control_id] = 2
+        ordered.append(item)
+
+    for control_id in sorted(by_id):
+        visit(control_id)
+    return tuple(ordered)
+
+
+def _blocks_gate(item: Finding) -> bool:
+    return (
+        item.applicable
+        and item.blocking
+        and (item.required or item.selected)
+    )
 
 
 def evaluate_diagnostics(
@@ -137,14 +182,59 @@ def evaluate_diagnostics(
     if any(item.policy_id != policy_id for item in controls):
         raise EvaluationError("control policy identity mismatch")
 
-    findings: list[Finding] = []
-    for item in sorted(controls, key=lambda control: control.control_id):
+    resolved: dict[
+        str,
+        tuple[
+            FindingStatus,
+            bool,
+            EvidenceState,
+            str | None,
+            tuple[str, ...],
+            bool,
+        ],
+    ] = {}
+    for item in _dependency_order(controls):
         status, effective_applicable = _finding_status(item)
         if item.blocking and status not in {FindingStatus.FAIL, FindingStatus.WARN}:
             raise EvaluationError("only factual FAIL or WARN may be blocking")
-        if status in {FindingStatus.PASS, FindingStatus.NOT_APPLICABLE} and item.severity != Severity.NONE:
+        if (
+            status in {FindingStatus.PASS, FindingStatus.NOT_APPLICABLE}
+            and item.severity != Severity.NONE
+        ):
             raise EvaluationError("PASS and NOT_APPLICABLE severity must be none")
-        findings.append(
+
+        evidence_state = item.evidence_state
+        observed_id = item.observed_id
+        error_ids = tuple(sorted(item.error_ids))
+        blocking = item.blocking
+        if effective_applicable and any(
+            resolved[prerequisite_id][0] not in _SATISFIED_PREREQUISITES
+            for prerequisite_id in item.prerequisite_ids
+        ):
+            status = FindingStatus.UNKNOWN
+            error_ids = tuple(sorted({*error_ids, _PREREQUISITE_ERROR_ID}))
+            blocking = False
+        resolved[item.control_id] = (
+            status,
+            effective_applicable,
+            evidence_state,
+            observed_id,
+            error_ids,
+            blocking,
+        )
+
+    gate_active = gate_requested and not engine_error
+    preliminary: list[Finding] = []
+    for item in sorted(controls, key=lambda control: control.control_id):
+        (
+            status,
+            effective_applicable,
+            evidence_state,
+            observed_id,
+            error_ids,
+            blocking,
+        ) = resolved[item.control_id]
+        preliminary.append(
             Finding(
                 control_id=item.control_id,
                 check_version=item.check_version,
@@ -154,21 +244,35 @@ def evaluate_diagnostics(
                 applicable=effective_applicable,
                 prerequisite_ids=tuple(sorted(item.prerequisite_ids)),
                 expected_id=item.expected_id,
-                observed_id=item.observed_id,
-                evidence_state=item.evidence_state,
+                observed_id=observed_id,
+                observed_status=item.observed_status,
+                evidence_state=evidence_state,
                 status=status,
                 severity=item.severity,
-                blocking=item.blocking,
+                blocking=blocking,
                 evidence_refs=tuple(item.evidence_refs),
-                error_ids=tuple(sorted(item.error_ids)),
+                error_ids=error_ids,
                 remedy_id=item.remedy_id,
                 exception_id=item.exception_id,
+                gate_impact=GateImpact.NOT_EVALUATED,
+            )
+        )
+
+    immutable_preliminary = tuple(preliminary)
+    blocker_ids = {
+        item.control_id for item in immutable_preliminary if _blocks_gate(item)
+    }
+    findings: list[Finding] = []
+    for item in immutable_preliminary:
+        findings.append(
+            replace(
+                item,
                 gate_impact=(
                     GateImpact.NOT_EVALUATED
-                    if not gate_requested or engine_error
+                    if not gate_active
                     else (
                         GateImpact.BLOCKS
-                        if item.blocking
+                        if item.control_id in blocker_ids
                         else GateImpact.DOES_NOT_BLOCK
                     )
                 ),
@@ -181,11 +285,7 @@ def evaluate_diagnostics(
     if full_coverage.denominator == 0:
         raise EvaluationError("required-policy denominator cannot be zero")
     coverage = CoveragePair(selected_coverage, full_coverage)
-    blockers = tuple(
-        item.control_id
-        for item in immutable_findings
-        if item.required and item.applicable and item.blocking
-    )
+    blockers = tuple(sorted(blocker_ids))
 
     has_incomplete_observation = any(
         item.status in {FindingStatus.UNKNOWN, FindingStatus.SKIPPED}
@@ -198,7 +298,7 @@ def evaluate_diagnostics(
         if has_incomplete_observation
         else RunState.COMPLETE
     )
-    if not gate_requested or engine_error:
+    if not gate_active:
         gate_state = GateState.NOT_EVALUATED
     elif full_coverage.gap_ids or blockers:
         gate_state = GateState.BLOCKED
@@ -207,8 +307,8 @@ def evaluate_diagnostics(
     gate = GateEvaluation(
         policy_id=policy_id,
         gate_state=gate_state,
-        blocking_finding_ids=tuple(sorted(blockers)),
-        coverage_gap_ids=full_coverage.gap_ids,
+        blocking_finding_ids=blockers if gate_active else (),
+        coverage_gap_ids=full_coverage.gap_ids if gate_active else (),
     )
 
     if engine_error:

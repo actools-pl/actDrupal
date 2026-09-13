@@ -13,9 +13,11 @@ from .configuration import (
     load_contract_resource,
     parse_json_bytes,
     resolve_configuration,
+    utc_timestamp_nanoseconds,
     validate_contract_limits,
 )
-from .errors import ContractError, ContractVersionError
+from .errors import ContractError, ContractVersionError, EvaluationError
+from .evaluation import ControlEvaluationInput, evaluate_diagnostics
 from .graph import requirement_graph_model, validate_requirement_graph
 from .models import (
     ActorRequirement,
@@ -30,6 +32,7 @@ from .models import (
     BackupEncryption,
     BackupRepository,
     BackupSet,
+    BackupTransport,
     CleanupObligation,
     CleanupRecord,
     CollectionAttempt,
@@ -111,6 +114,24 @@ CATALOG_RESOURCE = "contract-catalog-1.0.0.json"
 CATALOG_SCHEMA_RESOURCE = "contract-catalog-1.0.0.schema.json"
 SCHEMA_VERSION = "1.0.0"
 MAX_GRAPH_AGGREGATE_NODES = 32_768
+MAX_PLAN_VALIDITY_NANOSECONDS = 15 * 60 * 1_000_000_000
+
+MANDATORY_SINGLE_SITE_CONSTITUENT_KINDS = frozenset(
+    {
+        "database",
+        "public-files",
+        "private-files",
+        "configuration",
+        "release-identity",
+        "application-secrets",
+    }
+)
+MANDATORY_BACKUP_COMMIT_VERIFICATIONS = {
+    "constituents_complete": "check-constituents-complete",
+    "authenticated_manifest": "check-authenticated-manifest",
+    "repository_verified": "check-repository-availability",
+    "snapshot_reference_verified": "check-repository-snapshot",
+}
 
 
 def _pointer(parts: list[object]) -> str:
@@ -277,6 +298,32 @@ def canonical_contract_digest(value: object) -> str:
     import hashlib
 
     return hashlib.sha256(canonical_contract_bytes(value)).hexdigest()
+
+
+def canonical_plan_payload_bytes(value: object) -> bytes:
+    """Return canonical bytes for the immutable plan payload, excluding review."""
+    if isinstance(value, Mapping):
+        primitive: object = copy.deepcopy(dict(value))
+    else:
+        primitive = to_primitive(value)
+    if not isinstance(primitive, dict):
+        raise TypeError("plan payload must be an owned plan model or mapping")
+    primitive.pop("review", None)
+    return canonical_json_bytes(primitive)
+
+
+def canonical_plan_payload_digest(value: object) -> str:
+    """Return the noncircular digest bound by a plan review receipt."""
+    import hashlib
+
+    return hashlib.sha256(canonical_plan_payload_bytes(value)).hexdigest()
+
+
+def _utc_instant(family: str, path: str, value: object) -> int:
+    try:
+        return utc_timestamp_nanoseconds(value)
+    except ConfigurationError:
+        raise ContractError(family, path, "invalid_utc_timestamp") from None
 
 
 def _target(item: Mapping[str, Any]) -> Target:
@@ -453,6 +500,11 @@ def _diagnostic_model(document: Mapping[str, Any]) -> DiagnosticEvidence:
                 prerequisite_ids=tuple(item["prerequisite_ids"]),
                 expected_id=item["expected_id"],
                 observed_id=item["observed_id"],
+                observed_status=(
+                    None
+                    if item["observed_status"] is None
+                    else FindingStatus(item["observed_status"])
+                ),
                 evidence_state=EvidenceState(item["evidence_state"]),
                 status=FindingStatus(item["status"]),
                 severity=Severity(item["severity"]),
@@ -532,7 +584,14 @@ def _backup_model(document: Mapping[str, Any]) -> BackupSet:
         constituents=tuple(
             BackupConstituent(**item) for item in document["constituents"]
         ),
-        repository=BackupRepository(**document["repository"]),
+        repository=BackupRepository(
+            repository_id=document["repository"]["repository_id"],
+            snapshot_id=document["repository"]["snapshot_id"],
+            transport=BackupTransport(document["repository"]["transport"]),
+            availability_verified_at=document["repository"][
+                "availability_verified_at"
+            ],
+        ),
         encryption=BackupEncryption(**document["encryption"]),
         file_history_coverage=_history(document["file_history_coverage"]),
         pitr_coverage=_history(document["pitr_coverage"]),
@@ -641,8 +700,21 @@ def _command_model(document: Mapping[str, Any]) -> CommandResult:
 def _validate_plan_semantics(document: Mapping[str, Any]) -> None:
     if document["action"] != document["request"]["action"]:
         raise ContractError("plan", "/request/action", "plan_request_action_mismatch")
-    if document["expires_at"] <= document["collected_at"]:
+    collected_at = _utc_instant("plan", "/collected_at", document["collected_at"])
+    expires_at = _utc_instant("plan", "/expires_at", document["expires_at"])
+    if expires_at <= collected_at:
         raise ContractError("plan", "/expires_at", "plan_expiry_not_after_collection")
+    if expires_at - collected_at > MAX_PLAN_VALIDITY_NANOSECONDS:
+        raise ContractError("plan", "/expires_at", "plan_validity_window_exceeded")
+    review = document["review"]
+    reviewed_at = _utc_instant("plan", "/review/reviewed_at", review["reviewed_at"])
+    review_expires_at = _utc_instant(
+        "plan", "/review/expires_at", review["expires_at"]
+    )
+    if not collected_at <= reviewed_at < review_expires_at <= expires_at:
+        raise ContractError(
+            "plan", "/review", "plan_review_interval_outside_validity"
+        )
     disruption = document["disruption"]
     if disruption["maximum_seconds"] < disruption["expected_seconds"]:
         raise ContractError(
@@ -669,6 +741,10 @@ def _validate_plan_semantics(document: Mapping[str, Any]) -> None:
             "/irreversible_boundaries",
             "plan_irreversible_boundary_mismatch",
         )
+    if review["reviewed_plan_digest"] != canonical_plan_payload_digest(document):
+        raise ContractError(
+            "plan", "/review/reviewed_plan_digest", "plan_review_digest_mismatch"
+        )
 
 
 def _validate_operation_semantics(document: Mapping[str, Any]) -> None:
@@ -683,9 +759,30 @@ def _validate_operation_semantics(document: Mapping[str, Any]) -> None:
         raise ContractError(
             "operation-journal", "/attempts", "journal_duplicate_attempt_id"
         )
+    evidence_ids = [item["evidence_id"] for item in document["evidence_refs"]]
+    if len(evidence_ids) != len(set(evidence_ids)):
+        raise ContractError(
+            "operation-journal",
+            "/evidence_refs",
+            "journal_duplicate_evidence_reference",
+        )
+    known_evidence_ids = set(evidence_ids)
+    for index, postcondition in enumerate(document["expected_postconditions"]):
+        evidence_id = postcondition["evidence_id"]
+        if evidence_id is not None and evidence_id not in known_evidence_ids:
+            raise ContractError(
+                "operation-journal",
+                f"/expected_postconditions/{index}/evidence_id",
+                "journal_postcondition_evidence_missing",
+            )
     if document["state"] == StageState.SUCCEEDED.value:
         if document["error"] is not None or any(
-            item["required"] and item["state"] != "satisfied"
+            item["required"]
+            and (
+                item["state"] != "satisfied"
+                or item["evidence_id"] is None
+                or item["evidence_id"] not in known_evidence_ids
+            )
             for item in document["expected_postconditions"]
         ):
             raise ContractError(
@@ -749,11 +846,16 @@ _INCOMPLETE_EVIDENCE_STATES = {
 
 
 def _validate_diagnostic_semantics(document: Mapping[str, Any]) -> None:
-    if not (
-        document["captured_at"]
-        <= document["evaluated_at"]
-        <= document["valid_until"]
-    ):
+    captured_at = _utc_instant(
+        "diagnostic-evidence", "/captured_at", document["captured_at"]
+    )
+    evaluated_at = _utc_instant(
+        "diagnostic-evidence", "/evaluated_at", document["evaluated_at"]
+    )
+    valid_until = _utc_instant(
+        "diagnostic-evidence", "/valid_until", document["valid_until"]
+    )
+    if not captured_at <= evaluated_at <= valid_until:
         raise ContractError(
             "diagnostic-evidence", "/evaluated_at", "evidence_time_order_invalid"
         )
@@ -766,26 +868,37 @@ def _validate_diagnostic_semantics(document: Mapping[str, Any]) -> None:
     for index, item in enumerate(findings):
         evidence_state = item["evidence_state"]
         status = item["status"]
+        observed_status = item["observed_status"]
         path = f"/findings/{index}/status"
         if item["policy_id"] != document["context"]["policy_id"]:
             raise ContractError(
                 "diagnostic-evidence", path, "finding_policy_identity_mismatch"
             )
-        if evidence_state == EvidenceState.VALID.value and status not in _VALID_FINDING_STATES:
+        if (
+            evidence_state == EvidenceState.VALID.value
+            and observed_status not in _VALID_FINDING_STATES
+        ):
             raise ContractError(
                 "diagnostic-evidence", path, "valid_evidence_status_mismatch"
             )
-        if evidence_state in _INCOMPLETE_EVIDENCE_STATES and status != FindingStatus.UNKNOWN.value:
+        if evidence_state in _INCOMPLETE_EVIDENCE_STATES and (
+            status != FindingStatus.UNKNOWN.value or observed_status is not None
+        ):
             raise ContractError(
                 "diagnostic-evidence", path, "missing_evidence_cannot_pass"
             )
-        if evidence_state == EvidenceState.SKIPPED.value and status != FindingStatus.SKIPPED.value:
+        if evidence_state == EvidenceState.SKIPPED.value and (
+            status != FindingStatus.SKIPPED.value or observed_status is not None
+        ):
             raise ContractError(
                 "diagnostic-evidence", path, "skipped_evidence_status_mismatch"
             )
         if (
             evidence_state == EvidenceState.NOT_APPLICABLE_PROVEN.value
-            and status != FindingStatus.NOT_APPLICABLE.value
+            and (
+                status != FindingStatus.NOT_APPLICABLE.value
+                or observed_status is not None
+            )
         ):
             raise ContractError(
                 "diagnostic-evidence", path, "applicability_evidence_status_mismatch"
@@ -805,7 +918,9 @@ def _validate_diagnostic_semantics(document: Mapping[str, Any]) -> None:
             raise ContractError(
                 "diagnostic-evidence", path, "finding_observation_required"
             )
-        if evidence_state != EvidenceState.VALID.value and item["observed_id"] is not None:
+        if evidence_state != EvidenceState.VALID.value and (
+            item["observed_id"] is not None or observed_status is not None
+        ):
             raise ContractError(
                 "diagnostic-evidence", path, "finding_observation_state_mismatch"
             )
@@ -822,37 +937,6 @@ def _validate_diagnostic_semantics(document: Mapping[str, Any]) -> None:
         } and item["severity"] != Severity.NONE.value:
             raise ContractError(
                 "diagnostic-evidence", path, "finding_severity_status_mismatch"
-            )
-
-    assessed = _VALID_FINDING_STATES
-    for coverage_name, predicate in (
-        ("selected", lambda item: item["selected"] and item["applicable"]),
-        (
-            "full_required_policy",
-            lambda item: item["required"] and item["applicable"],
-        ),
-    ):
-        coverage = document["coverage"][coverage_name]
-        covered = [item for item in findings if predicate(item)]
-        gaps = set(coverage["gap_ids"])
-        expected_gaps = {
-            item["control_id"] for item in covered if item["status"] not in assessed
-        }
-        expected_numerator = sum(item["status"] in assessed for item in covered)
-        if gaps != expected_gaps:
-            raise ContractError(
-                "diagnostic-evidence",
-                f"/coverage/{coverage_name}/gap_ids",
-                "coverage_gap_inventory_mismatch",
-            )
-        if (
-            coverage["numerator"] != expected_numerator
-            or coverage["denominator"] != len(covered)
-        ):
-            raise ContractError(
-                "diagnostic-evidence",
-                f"/coverage/{coverage_name}",
-                "coverage_fraction_invalid",
             )
 
     gate_policy_ids = [item["policy_id"] for item in document["gates"]]
@@ -872,67 +956,146 @@ def _validate_diagnostic_semantics(document: Mapping[str, Any]) -> None:
             )
         if gate["policy_id"] == document["context"]["policy_id"]:
             context_gate = (index, gate)
+        elif (
+            gate["gate_state"] != GateState.NOT_EVALUATED.value
+            or gate["blocking_finding_ids"]
+            or gate["coverage_gap_ids"]
+        ):
+            raise ContractError(
+                "diagnostic-evidence",
+                f"/gates/{index}",
+                "gate_without_policy_evaluation",
+            )
     if context_gate is None:
         raise ContractError(
             "diagnostic-evidence", "/gates", "gate_context_policy_missing"
         )
 
     gate_index, gate = context_gate
-    expected_blockers = {
-        item["control_id"]
+    controls = tuple(
+        ControlEvaluationInput(
+            control_id=item["control_id"],
+            check_version=item["check_version"],
+            policy_id=item["policy_id"],
+            selected=item["selected"],
+            required=item["required"],
+            applicable=item["applicable"],
+            prerequisite_ids=tuple(item["prerequisite_ids"]),
+            expected_id=item["expected_id"],
+            observed_id=item["observed_id"],
+            evidence_state=EvidenceState(item["evidence_state"]),
+            observed_status=(
+                FindingStatus(item["observed_status"])
+                if item["observed_status"] is not None
+                else None
+            ),
+            severity=Severity(item["severity"]),
+            blocking=item["blocking"],
+            evidence_refs=tuple(
+                _evidence_reference(reference)
+                for reference in item["evidence_refs"]
+            ),
+            error_ids=tuple(
+                error_id
+                for error_id in item["error_ids"]
+                if error_id != "prerequisite-not-satisfied"
+            ),
+            remedy_id=item["remedy_id"],
+            exception_id=item["exception_id"],
+        )
         for item in findings
-        if item["applicable"] and item["selected"] and item["blocking"]
-    }
-    expected_gaps = set(document["coverage"]["full_required_policy"]["gap_ids"])
-    if (
-        set(gate["blocking_finding_ids"]) != expected_blockers
-        or set(gate["coverage_gap_ids"]) != expected_gaps
-    ):
-        raise ContractError(
-            "diagnostic-evidence",
-            f"/gates/{gate_index}",
-            "gate_finding_inventory_mismatch",
-        )
-    expected_state = (
-        GateState.BLOCKED.value
-        if expected_blockers or expected_gaps
-        else GateState.PASS.value
     )
-    if (
-        gate["gate_state"] != GateState.NOT_EVALUATED.value
-        and gate["gate_state"] != expected_state
-    ):
-        raise ContractError(
-            "diagnostic-evidence",
-            f"/gates/{gate_index}/gate_state",
-            "gate_disposition_mismatch",
+    try:
+        evaluated = evaluate_diagnostics(
+            controls,
+            policy_id=document["context"]["policy_id"],
+            gate_requested=gate["gate_state"] != GateState.NOT_EVALUATED.value,
+            engine_error=document["run_state"] == RunState.ERROR.value,
         )
+    except EvaluationError as exc:
+        reason = (
+            "coverage_required_denominator_empty"
+            if "denominator" in str(exc)
+            else "finding_prerequisite_invalid"
+            if "prerequisite" in str(exc) or "depend" in str(exc)
+            else "diagnostic_evaluation_invalid"
+        )
+        raise ContractError("diagnostic-evidence", "/findings", reason) from None
+
+    expected_findings = {item.control_id: item for item in evaluated.findings}
     for finding_index, finding in enumerate(findings):
-        expected_impact = (
-            GateImpact.NOT_EVALUATED.value
-            if gate["gate_state"] == GateState.NOT_EVALUATED.value
-            else (
-                GateImpact.BLOCKS.value
-                if finding["blocking"]
-                else GateImpact.DOES_NOT_BLOCK.value
+        expected = expected_findings[finding["control_id"]]
+        if (
+            finding["status"] != expected.status.value
+            or finding["evidence_state"] != expected.evidence_state.value
+            or finding["observed_id"] != expected.observed_id
+            or finding["observed_status"]
+            != (
+                None
+                if expected.observed_status is None
+                else expected.observed_status.value
             )
-        )
-        if finding["gate_impact"] != expected_impact:
+            or finding["applicable"] != expected.applicable
+            or finding["blocking"] != expected.blocking
+            or set(finding["error_ids"]) != set(expected.error_ids)
+        ):
+            raise ContractError(
+                "diagnostic-evidence",
+                f"/findings/{finding_index}",
+                (
+                    "finding_prerequisite_outcome_mismatch"
+                    if finding["prerequisite_ids"]
+                    else "finding_evaluation_mismatch"
+                ),
+            )
+        if finding["gate_impact"] != expected.gate_impact.value:
             raise ContractError(
                 "diagnostic-evidence",
                 f"/findings/{finding_index}/gate_impact",
                 "finding_gate_impact_mismatch",
             )
 
-    if document["run_state"] == RunState.COMPLETE.value and any(
-        item["status"] in {
-            FindingStatus.UNKNOWN.value,
-            FindingStatus.SKIPPED.value,
-        }
-        for item in findings
+    for coverage_name, expected in (
+        ("selected", evaluated.coverage.selected),
+        ("full_required_policy", evaluated.coverage.full_required_policy),
+    ):
+        coverage = document["coverage"][coverage_name]
+        if set(coverage["gap_ids"]) != set(expected.gap_ids):
+            raise ContractError(
+                "diagnostic-evidence",
+                f"/coverage/{coverage_name}/gap_ids",
+                "coverage_gap_inventory_mismatch",
+            )
+        if (
+            coverage["numerator"] != expected.numerator
+            or coverage["denominator"] != expected.denominator
+        ):
+            raise ContractError(
+                "diagnostic-evidence",
+                f"/coverage/{coverage_name}",
+                "coverage_fraction_invalid",
+            )
+
+    if document["run_state"] != evaluated.run_state.value:
+        raise ContractError(
+            "diagnostic-evidence", "/run_state", "run_state_evaluation_mismatch"
+        )
+    if gate["gate_state"] != evaluated.gate.gate_state.value:
+        raise ContractError(
+            "diagnostic-evidence",
+            f"/gates/{gate_index}/gate_state",
+            "gate_disposition_mismatch",
+        )
+    if (
+        set(gate["blocking_finding_ids"])
+        != set(evaluated.gate.blocking_finding_ids)
+        or set(gate["coverage_gap_ids"])
+        != set(evaluated.gate.coverage_gap_ids)
     ):
         raise ContractError(
-            "diagnostic-evidence", "/run_state", "run_state_coverage_mismatch"
+            "diagnostic-evidence",
+            f"/gates/{gate_index}",
+            "gate_finding_inventory_mismatch",
         )
     attempt_ids = [item["attempt_id"] for item in document["attempts"]]
     if len(attempt_ids) != len(set(attempt_ids)):
@@ -946,12 +1109,32 @@ def _validate_diagnostic_semantics(document: Mapping[str, Any]) -> None:
         raise ContractError(
             "diagnostic-evidence", "/attempts", "attempt_unknown_control"
         )
+    for index, attempt in enumerate(document["attempts"]):
+        if _utc_instant(
+            "diagnostic-evidence",
+            f"/attempts/{index}/finished_at",
+            attempt["finished_at"],
+        ) < _utc_instant(
+            "diagnostic-evidence",
+            f"/attempts/{index}/started_at",
+            attempt["started_at"],
+        ):
+            raise ContractError(
+                "diagnostic-evidence",
+                f"/attempts/{index}/finished_at",
+                "attempt_time_order_invalid",
+            )
 
 
 def _validate_backup_semantics(document: Mapping[str, Any]) -> None:
     constituents = {item["constituent_id"]: item for item in document["constituents"]}
     if len(constituents) != len(document["constituents"]):
         raise ContractError("backup-set", "/constituents", "backup_duplicate_constituent")
+    constituent_kinds = [item["kind"] for item in document["constituents"]]
+    if len(constituent_kinds) != len(set(constituent_kinds)):
+        raise ContractError(
+            "backup-set", "/constituents", "backup_duplicate_constituent_kind"
+        )
     receipts = {
         item["constituent_id"]: item for item in document["constituent_receipts"]
     }
@@ -959,12 +1142,37 @@ def _validate_backup_semantics(document: Mapping[str, Any]) -> None:
         raise ContractError(
             "backup-set", "/constituent_receipts", "backup_duplicate_receipt"
         )
+    receipt_ids = [item["receipt_id"] for item in document["constituent_receipts"]]
+    if len(receipt_ids) != len(set(receipt_ids)):
+        raise ContractError(
+            "backup-set", "/constituent_receipts", "backup_duplicate_receipt_identity"
+        )
     if not set(receipts) <= set(constituents):
         raise ContractError(
             "backup-set", "/constituent_receipts", "backup_receipt_unknown_constituent"
         )
+    verification_results = {
+        item["check_id"]: item for item in document["verification_results"]
+    }
+    if len(verification_results) != len(document["verification_results"]):
+        raise ContractError(
+            "backup-set", "/verification_results", "backup_duplicate_verification"
+        )
     commit = document["commit"]
     if commit["status"] == BackupCommitStatus.COMMITTED.value:
+        mandatory = {
+            item["kind"]: item
+            for item in document["constituents"]
+            if item["kind"] in MANDATORY_SINGLE_SITE_CONSTITUENT_KINDS
+        }
+        if set(mandatory) != MANDATORY_SINGLE_SITE_CONSTITUENT_KINDS or any(
+            not item["required"] for item in mandatory.values()
+        ):
+            raise ContractError(
+                "backup-set",
+                "/constituents",
+                "backup_commit_mandatory_constituent_missing",
+            )
         missing = [
             constituent_id
             for constituent_id, item in constituents.items()
@@ -983,6 +1191,19 @@ def _validate_backup_semantics(document: Mapping[str, Any]) -> None:
             raise ContractError(
                 "backup-set", "/commit/checks", "backup_commit_checks_incomplete"
             )
+        failed_verifications = [
+            check_id
+            for check_name, check_id in MANDATORY_BACKUP_COMMIT_VERIFICATIONS.items()
+            if not commit["checks"][check_name]
+            or check_id not in verification_results
+            or verification_results[check_id]["status"] != "pass"
+        ]
+        if failed_verifications:
+            raise ContractError(
+                "backup-set",
+                "/verification_results",
+                "backup_commit_verification_missing_or_failed",
+            )
     proof = document["restore_proof"]
     if proof["status"] == RestoreProofStatus.NOT_RUN.value and (
         proof["receipt_id"] is not None or proof["verified_at"] is not None
@@ -999,7 +1220,9 @@ def _validate_backup_semantics(document: Mapping[str, Any]) -> None:
 
 
 def _validate_command_semantics(document: Mapping[str, Any]) -> None:
-    if document["finished_at"] < document["started_at"]:
+    if _utc_instant(
+        "command-result", "/finished_at", document["finished_at"]
+    ) < _utc_instant("command-result", "/started_at", document["started_at"]):
         raise ContractError(
             "command-result", "/finished_at", "command_time_order_invalid"
         )
@@ -1033,8 +1256,15 @@ def _validate_command_semantics(document: Mapping[str, Any]) -> None:
                 "/presentation/artifact_reference",
                 "undelivered_html_artifact_forbidden",
             )
-    allowed_next = {item.action_id for item in load_contract_catalog().safe_next_actions}
-    if any(item["action_id"] not in allowed_next for item in document["next_actions"]):
+    allowed_next = {
+        (item.action_id, item.source, item.documentation_id)
+        for item in load_contract_catalog().safe_next_actions
+    }
+    if any(
+        (item["action_id"], item["source"], item["documentation_id"])
+        not in allowed_next
+        for item in document["next_actions"]
+    ):
         raise ContractError(
             "command-result", "/next_actions", "unowned_next_action"
         )

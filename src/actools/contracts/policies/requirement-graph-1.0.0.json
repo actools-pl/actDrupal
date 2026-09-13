@@ -6451,13 +6451,18 @@
       "id": "G11",
       "kind": "gate",
       "title": "Worker reality",
-      "parent_feature_ids": [],
-      "parent_mapping_status": "unresolved",
+      "parent_feature_ids": [
+        "F27",
+        "F28",
+        "F29",
+        "F31"
+      ],
+      "parent_mapping_status": "resolved",
       "source_refs": [
         "architecture-v1.5.1#15"
       ],
-      "decision_status": "accepted",
-      "decision_detail": "Accepted release gate. Input: Actual document request through UI/API to returned artifact Required result: Correct content/math/figures, required format and access permissions",
+      "decision_status": "conditional",
+      "decision_detail": "Conditional future gate if document workers are selected. Input: Actual document request through UI/API to returned artifact Required result: Correct content/math/figures, required format and access permissions",
       "implementation_status": "not-implemented",
       "advertised_support": false,
       "runtime_evidence": {
@@ -6465,7 +6470,7 @@
         "evidence_ids": []
       },
       "applicability": {
-        "predicate": "always",
+        "predicate": "future-decision",
         "capability_id": null,
         "mapping_status": "resolved"
       },
@@ -6504,13 +6509,18 @@
       "id": "G12",
       "kind": "gate",
       "title": "Worker failure/abuse",
-      "parent_feature_ids": [],
-      "parent_mapping_status": "unresolved",
+      "parent_feature_ids": [
+        "F27",
+        "F28",
+        "F30",
+        "F31"
+      ],
+      "parent_mapping_status": "resolved",
       "source_refs": [
         "architecture-v1.5.1#15"
       ],
-      "decision_status": "accepted",
-      "decision_detail": "Accepted release gate. Input: Malformed archive/XML/TeX/SVG/PDF, CPU/memory/disk bomb, network request Required result: Bounded failure, no cross-boundary access, no stale leaked job files",
+      "decision_status": "conditional",
+      "decision_detail": "Conditional future gate if document workers are selected. Input: Malformed archive/XML/TeX/SVG/PDF, CPU/memory/disk bomb, network request Required result: Bounded failure, no cross-boundary access, no stale leaked job files",
       "implementation_status": "not-implemented",
       "advertised_support": false,
       "runtime_evidence": {
@@ -6518,7 +6528,7 @@
         "evidence_ids": []
       },
       "applicability": {
-        "predicate": "always",
+        "predicate": "future-decision",
         "capability_id": null,
         "mapping_status": "resolved"
       },
@@ -6557,13 +6567,17 @@
       "id": "G13",
       "kind": "gate",
       "title": "Queue reliability",
-      "parent_feature_ids": [],
-      "parent_mapping_status": "unresolved",
+      "parent_feature_ids": [
+        "F28",
+        "F29",
+        "F32"
+      ],
+      "parent_mapping_status": "resolved",
       "source_refs": [
         "architecture-v1.5.1#15"
       ],
-      "decision_status": "accepted",
-      "decision_detail": "Accepted release gate. Input: Crash after output before acknowledgment; concurrent lease/retry/cancel Required result: Single committed result, no lost accepted job; cancellation/drain semantics respected",
+      "decision_status": "conditional",
+      "decision_detail": "Conditional future gate if a document queue is selected. Input: Crash after output before acknowledgment; concurrent lease/retry/cancel Required result: Single committed result, no lost accepted job; cancellation/drain semantics respected",
       "implementation_status": "not-implemented",
       "advertised_support": false,
       "runtime_evidence": {
@@ -6571,7 +6585,7 @@
         "evidence_ids": []
       },
       "applicability": {
-        "predicate": "always",
+        "predicate": "future-decision",
         "capability_id": null,
         "mapping_status": "resolved"
       },
@@ -6769,13 +6783,16 @@
       "id": "G17",
       "kind": "gate",
       "title": "PITR",
-      "parent_feature_ids": [],
-      "parent_mapping_status": "unresolved",
+      "parent_feature_ids": [
+        "F42",
+        "F43"
+      ],
+      "parent_mapping_status": "resolved",
       "source_refs": [
         "architecture-v1.5.1#15"
       ],
-      "decision_status": "accepted",
-      "decision_detail": "Accepted release gate. Input: Known writes around target, missing/corrupt segment, rotation boundary Required result: Correct before/after content; missing coverage blocks promotion",
+      "decision_status": "conditional",
+      "decision_detail": "Conditional future gate if PITR is selected. Input: Known writes around target, missing/corrupt segment, rotation boundary Required result: Correct before/after content; missing coverage blocks promotion",
       "implementation_status": "not-implemented",
       "advertised_support": false,
       "runtime_evidence": {
@@ -6783,7 +6800,7 @@
         "evidence_ids": []
       },
       "applicability": {
-        "predicate": "always",
+        "predicate": "future-decision",
         "capability_id": null,
         "mapping_status": "resolved"
       },

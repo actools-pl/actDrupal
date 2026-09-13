@@ -35,7 +35,7 @@
     }
   ],
   "collected_at": "2026-09-13T10:00:00Z",
-  "expires_at": "2026-09-13T10:30:00Z",
+  "expires_at": "2026-09-13T10:15:00Z",
   "context_digests": {
     "release": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
     "configuration": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
@@ -81,8 +81,8 @@
   "review": {
     "required": true,
     "review_identity": "review-install-alpha",
-    "reviewed_plan_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "reviewed_plan_digest": "985bb4dd4ccdc8793bfffbee4436ccf18281f26b74f5c881627a0a7ad4dcd2f1",
     "reviewed_at": "2026-09-13T10:01:00Z",
-    "expires_at": "2026-09-13T10:30:00Z"
+    "expires_at": "2026-09-13T10:15:00Z"
   }
 }

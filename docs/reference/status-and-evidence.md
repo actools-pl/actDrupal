@@ -20,9 +20,13 @@ exception does not rewrite FAIL to PASS.
 
 Evidence state is also independent: `valid`, `missing`, `stale`, `inaccessible`,
 `malformed`, `unsupported`, `inconclusive`, `skipped`, or
-`not-applicable-proven`. Valid evidence needs an observed identity and an evidence
-reference. Missing or incomplete proof cannot carry a factual PASS/FAIL/WARN.
-NOT_APPLICABLE requires its own applicability proof.
+`not-applicable-proven`. Valid evidence needs an observed identity, a raw
+`observed_status` of PASS/FAIL/WARN, and an evidence reference. Missing or
+incomplete proof cannot carry a factual observation. NOT_APPLICABLE requires its
+own applicability proof. When a prerequisite is not satisfied, the dependent
+final `status` becomes UNKNOWN and records `prerequisite-not-satisfied`; its valid
+evidence, observation identity, raw `observed_status`, and evidence references
+remain intact for audit. Independent findings continue.
 
 ## Run state, gate state, and impact
 
@@ -37,6 +41,11 @@ Each evaluated policy has a separate gate state:
 
 Each finding separately records `blocks`, `does-not-block`, or `not-evaluated`.
 A healthy doctor policy does not imply a production-admission evaluation.
+The canonical blocker scope is the union of applicable required controls and
+applicable controls explicitly selected for this evaluation. Selection cannot
+remove a required blocker; an unselected optional finding cannot block this gate.
+Any additional policy named in the single-policy evidence document must remain
+`not_evaluated` with empty blocker/gap inventories.
 
 ## Two coverage denominators
 
@@ -98,6 +107,11 @@ discarded.
 
 Rendering never changes capture/evaluation time or renews validity. A static HTML
 file is a historical view, not live state.
+
+All contract timestamps use calendar-valid UTC with a literal `Z` and zero to nine
+fractional digits. Comparison is by the represented instant at nanosecond
+precision, so whole-second and `.0Z` forms are equal and fractional seconds do not
+depend on lexical ordering.
 
 Evidence provenance separately records source kind/reference, authentication
 reference, integrity algorithm/digest/verification, context match, freshness, and

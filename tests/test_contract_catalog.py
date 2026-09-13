@@ -8,19 +8,27 @@ import pytest
 
 from actools.contracts.catalog import (
     canonical_contract_digest,
+    canonical_plan_payload_digest,
     load_contract_catalog,
     load_packaged_contract,
     parse_contract_bytes,
     registration_for,
     validate_contract_document,
 )
+from actools.contracts import configuration as configuration_module
 from actools.contracts.configuration import (
     ConfigurationError,
+    MAX_INPUT_BYTES,
     contract_schema_validator,
     load_contract_resource,
 )
 from actools.contracts.errors import ContractError, ContractVersionError
-from actools.contracts.models import ContractCatalog, RequirementGraph, to_primitive
+from actools.contracts.models import (
+    BackupTransport,
+    ContractCatalog,
+    RequirementGraph,
+    to_primitive,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests/fixtures/contracts"
@@ -98,6 +106,12 @@ def test_schema_enumerations_are_exact_catalog_projections() -> None:
     assert tuple(
         result_schema["$defs"]["nextAction"]["properties"]["action_id"]["enum"]
     ) == tuple(item.action_id for item in catalog.safe_next_actions)
+    backup_schema = load_contract_resource(
+        "schemas", "backup-set-1.0.0.schema.json"
+    )
+    assert backup_schema["$defs"]["repository"]["properties"]["transport"] == {
+        "const": BackupTransport.REST.value
+    }
 
 
 def test_every_owned_schema_is_draft_2020_12_and_all_objects_are_closed() -> None:
@@ -173,9 +187,46 @@ def test_packaged_resource_lookup_rejects_unowned_paths() -> None:
     assert exc.value.reason == "contract_resource_name_invalid"
 
 
-def test_every_significant_plan_group_changes_canonical_identity() -> None:
+def test_packaged_resource_loading_enforces_byte_and_depth_limits(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    schemas = tmp_path / "schemas"
+    schemas.mkdir()
+    monkeypatch.setattr(configuration_module.resources, "files", lambda _: tmp_path)
+
+    oversized = schemas / "oversized-1.0.0.schema.json"
+    oversized.write_bytes(b" " * (MAX_INPUT_BYTES + 1))
+    with pytest.raises(ConfigurationError) as exc:
+        load_contract_resource("schemas", oversized.name)
+    assert exc.value.reason == "input_byte_limit"
+
+    too_deep = schemas / "deep-1.0.0.schema.json"
+    too_deep.write_bytes(b"[" * 33 + b"0" + b"]" * 33)
+    with pytest.raises(ConfigurationError) as exc:
+        load_contract_resource("schemas", too_deep.name)
+    assert exc.value.reason == "container_depth_limit"
+
+
+def test_common_reference_expansion_rejects_cycles(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    common = {
+        "$defs": {
+            "first": {"$ref": "common-1.0.0.schema.json#/$defs/second"},
+            "second": {"$ref": "common-1.0.0.schema.json#/$defs/first"},
+        }
+    }
+    monkeypatch.setattr(configuration_module, "_schema_resource", lambda _: common)
+    with pytest.raises(ConfigurationError) as exc:
+        configuration_module.expand_common_references(
+            {"$ref": "common-1.0.0.schema.json#/$defs/first"}
+        )
+    assert exc.value.reason == "schema_reference_cycle"
+
+
+def test_every_significant_plan_payload_group_changes_review_identity() -> None:
     value = _json(FIXTURES / "valid/plan-1.0.0.json")
-    original = canonical_contract_digest(value)
+    original = canonical_plan_payload_digest(value)
 
     mutations = [
         lambda item: item["request"].__setitem__("digest", "0" * 64),
@@ -200,14 +251,44 @@ def test_every_significant_plan_group_changes_canonical_identity() -> None:
         lambda item: item["recovery"].__setitem__(
             "rollback_strategy", "qualified-recovery"
         ),
-        lambda item: item["review"].__setitem__(
-            "review_identity", "review-install-bravo"
-        ),
     ]
     digests = set()
     for mutate in mutations:
         candidate = copy.deepcopy(value)
         mutate(candidate)
-        digests.add(canonical_contract_digest(candidate))
+        digests.add(canonical_plan_payload_digest(candidate))
     assert original not in digests
     assert len(digests) == len(mutations)
+
+
+def test_plan_review_digest_has_one_noncircular_payload_projection() -> None:
+    value = _json(FIXTURES / "valid/plan-1.0.0.json")
+    payload_digest = canonical_plan_payload_digest(value)
+    assert value["review"]["reviewed_plan_digest"] == payload_digest
+
+    without_receipt = copy.deepcopy(value)
+    del without_receipt["review"]
+    changed_receipt = copy.deepcopy(value)
+    changed_receipt["review"].update(
+        {
+            "review_identity": "review-install-bravo",
+            "reviewed_plan_digest": "0" * 64,
+            "reviewed_at": "2026-09-13T10:02:00Z",
+        }
+    )
+    assert canonical_plan_payload_digest(without_receipt) == payload_digest
+    assert canonical_plan_payload_digest(changed_receipt) == payload_digest
+
+    rebound = copy.deepcopy(value)
+    rebound["target"]["site_id"] = "site-bravo"
+    with pytest.raises(ContractError) as exc:
+        validate_contract_document("plan", rebound)
+    assert exc.value.reason == "plan_review_digest_mismatch"
+    assert canonical_contract_digest(changed_receipt) != canonical_contract_digest(value)
+
+    substituted = copy.deepcopy(value)
+    substituted["target"]["site_id"] = "site-bravo"
+    assert canonical_plan_payload_digest(substituted) != payload_digest
+    with pytest.raises(ContractError) as exc:
+        validate_contract_document("plan", substituted)
+    assert exc.value.reason == "plan_review_digest_mismatch"

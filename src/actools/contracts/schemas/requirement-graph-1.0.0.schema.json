@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.actools.invalid/requirement-graph-1.0.0.schema.json",
+  "title": "Actools canonical requirement and capability graph 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "graph_id",
+    "profile",
+    "architecture_version",
+    "architecture_sha256",
+    "expected_counts",
+    "nodes"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "graph_id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]{2,95}(?![\\s\\S])"},
+    "profile": {"const": "single-site-production"},
+    "architecture_version": {"const": "1.5.1"},
+    "architecture_sha256": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"},
+    "expected_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["feature", "work_package", "gate", "ux_requirement", "security_refinement", "security_case", "total"],
+      "properties": {
+        "feature": {"const": 75},
+        "work_package": {"const": 25},
+        "gate": {"const": 22},
+        "ux_requirement": {"const": 18},
+        "security_refinement": {"const": 8},
+        "security_case": {"const": 15},
+        "total": {"const": 163}
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 163,
+      "items": {"$ref": "#/$defs/node"}
+    }
+  },
+  "$defs": {
+    "nodeId": {
+      "type": "string",
+      "pattern": "^(?:F(?:0[1-9]|[1-6][0-9]|7[0-5])|WP(?:0[1-9]|1[0-9]|2[0-5])|G(?:0[1-9]|1[0-9]|2[0-2])|UX-R(?:0[1-9]|1[0-8])|UXS-(?:0[1-8])|UXS-C(?:0[1-9]|1[0-5]))(?![\\s\\S])"
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "title",
+        "parent_feature_ids",
+        "parent_mapping_status",
+        "source_refs",
+        "decision_status",
+        "decision_detail",
+        "implementation_status",
+        "advertised_support",
+        "runtime_evidence",
+        "applicability",
+        "owner_ids",
+        "dependency_ids",
+        "dependency_mapping_status",
+        "refines_ids",
+        "supersedes_ids",
+        "relationship_mapping_status",
+        "test_mapping",
+        "contract_mapping",
+        "evidence_refs"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/nodeId"},
+        "kind": {"enum": ["feature", "work-package", "gate", "ux-requirement", "security-refinement", "security-case"]},
+        "title": {"type": "string", "minLength": 1, "maxLength": 512},
+        "parent_feature_ids": {
+          "type": "array",
+          "maxItems": 75,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^F(?:0[1-9]|[1-6][0-9]|7[0-5])(?![\\s\\S])"}
+        },
+        "parent_mapping_status": {"enum": ["resolved", "partial", "unresolved"]},
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 3, "maxLength": 192}
+        },
+        "decision_status": {"enum": ["accepted", "accepted-with-deferred-scope", "changed", "deferred", "conditional"]},
+        "decision_detail": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "implementation_status": {"enum": ["not-implemented", "partial", "implemented"]},
+        "advertised_support": {"type": "boolean"},
+        "runtime_evidence": {"$ref": "#/$defs/runtimeEvidence"},
+        "applicability": {"$ref": "#/$defs/applicability"},
+        "owner_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^(?:WP(?:0[1-9]|1[0-9]|2[0-5])|O(?:0[1-9]|1[0-9]))(?![\\s\\S])"}
+        },
+        "dependency_ids": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nodeId"}
+        },
+        "dependency_mapping_status": {"enum": ["resolved", "partial", "unresolved"]},
+        "refines_ids": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nodeId"}
+        },
+        "supersedes_ids": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nodeId"}
+        },
+        "relationship_mapping_status": {"enum": ["resolved", "partial", "unresolved"]},
+        "test_mapping": {"$ref": "#/$defs/testMapping"},
+        "contract_mapping": {"$ref": "#/$defs/contractMapping"},
+        "evidence_refs": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"}
+        }
+      }
+    },
+    "runtimeEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence_ids"],
+      "properties": {
+        "status": {"enum": ["not-evaluated", "pass", "fail", "unknown", "stale"]},
+        "evidence_ids": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+        }
+      }
+    },
+    "applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["predicate", "capability_id", "mapping_status"],
+      "properties": {
+        "predicate": {"enum": ["always", "when-selected", "when-enabled", "future-decision"]},
+        "capability_id": {
+          "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}]
+        },
+        "mapping_status": {"enum": ["resolved", "partial", "unresolved"]}
+      }
+    },
+    "testMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "acceptance_ids"],
+      "properties": {
+        "status": {"enum": ["resolved", "partial", "unresolved"]},
+        "acceptance_ids": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^(?:G(?:0[1-9]|1[0-9]|2[0-2])|UX-T(?:0[1-9]|1[0-9]|2[0-4])|UXS-C(?:0[1-9]|1[0-5])|[A-Z][A-Z0-9-]{2,63})(?![\\s\\S])"}
+        }
+      }
+    },
+    "contractMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "authority_ids", "secret_ids", "endpoint_ids", "resource_ids", "action_ids", "handler_ids", "schema_ids", "schema_update_ids", "probe_ids", "recovery_constituent_ids", "disable_behavior", "rollback_behavior", "support_profiles"],
+      "properties": {
+        "status": {"enum": ["resolved", "partial", "unresolved"]},
+        "authority_ids": {"$ref": "#/$defs/ownedIds"},
+        "secret_ids": {"$ref": "#/$defs/ownedIds"},
+        "endpoint_ids": {"$ref": "#/$defs/ownedIds"},
+        "resource_ids": {"$ref": "#/$defs/ownedIds"},
+        "action_ids": {"$ref": "#/$defs/actionIds"},
+        "handler_ids": {"$ref": "#/$defs/ownedIds"},
+        "schema_ids": {"$ref": "#/$defs/ownedIds"},
+        "schema_update_ids": {"$ref": "#/$defs/ownedIds"},
+        "probe_ids": {"$ref": "#/$defs/ownedIds"},
+        "recovery_constituent_ids": {"$ref": "#/$defs/ownedIds"},
+        "disable_behavior": {"type": "string", "minLength": 1, "maxLength": 512},
+        "rollback_behavior": {"type": "string", "minLength": 1, "maxLength": 512},
+        "support_profiles": {
+          "type": "array",
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {"const": "single-site-production"}
+        }
+      }
+    },
+    "ownedIds": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+    },
+    "actionIds": {
+      "type": "array",
+      "maxItems": 22,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "host.initialize",
+          "host.prepare",
+          "deployment.install",
+          "configuration.publish",
+          "credentials.rotate",
+          "service.restart",
+          "caddy.reload",
+          "maintenance.transition",
+          "application.operator",
+          "storage.probe",
+          "notification.probe",
+          "backup.capture",
+          "backup.verify",
+          "backup.maintain",
+          "recovery.rehearse",
+          "recovery.restore",
+          "recovery.promote",
+          "deployment.update",
+          "deployment.rollback",
+          "management.update",
+          "diagnostics.probe",
+          "operation.reconcile"
+        ]
+      }
+    }
+  }
+}

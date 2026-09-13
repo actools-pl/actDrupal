@@ -39,7 +39,7 @@ def test_project_declares_exact_runtime_dependencies() -> None:
     assert data["project"]["requires-python"] == ">=3.14,<3.15"
     assert data["project"]["scripts"] == {"actools": "actools.cli:main"}
     assert data["tool"]["setuptools"]["package-data"] == {
-        "actools.contracts": ["schemas/*.json"]
+        "actools.contracts": ["policies/*.json", "schemas/*.json"]
     }
 
 
@@ -159,7 +159,7 @@ def _wheel(
 
 
 def test_expected_wheel_shape_is_closed_and_contains_contract_resources() -> None:
-    assert len(EXPECTED_WHEEL_MEMBERS) == 16
+    assert len(EXPECTED_WHEEL_MEMBERS) == 30
     assert EXPECTED_RUNTIME_REQUIREMENTS == {
         "pyyaml": "6.0.3",
         "jsonschema": "4.26.0",
@@ -169,6 +169,16 @@ def test_expected_wheel_shape_is_closed_and_contains_contract_resources() -> Non
         "actools/contracts/schemas/common-1.0.0.schema.json",
         "actools/contracts/schemas/configuration-1.0.0.schema.json",
         "actools/contracts/schemas/configuration-defaults-1.0.0.json",
+        "actools/contracts/policies/contract-catalog-1.0.0.json",
+        "actools/contracts/policies/requirement-graph-1.0.0.json",
+        "actools/contracts/schemas/backup-set-1.0.0.schema.json",
+        "actools/contracts/schemas/command-result-1.0.0.schema.json",
+        "actools/contracts/schemas/contract-catalog-1.0.0.schema.json",
+        "actools/contracts/schemas/diagnostic-evidence-1.0.0.schema.json",
+        "actools/contracts/schemas/operation-journal-1.0.0.schema.json",
+        "actools/contracts/schemas/plan-1.0.0.schema.json",
+        "actools/contracts/schemas/release-manifest-1.0.0.schema.json",
+        "actools/contracts/schemas/requirement-graph-1.0.0.schema.json",
     } <= EXPECTED_WHEEL_MEMBERS
 
 
@@ -274,8 +284,12 @@ def test_contract_runtime_import_surface_is_declared() -> None:
     for relative in (
         "src/actools/contracts/__init__.py",
         "src/actools/contracts/canonical.py",
+        "src/actools/contracts/catalog.py",
         "src/actools/contracts/configuration.py",
         "src/actools/contracts/errors.py",
+        "src/actools/contracts/evaluation.py",
+        "src/actools/contracts/graph.py",
+        "src/actools/contracts/models.py",
     ):
         tree = ast.parse((ROOT / relative).read_text(encoding="utf-8"))
         for node in ast.walk(tree):

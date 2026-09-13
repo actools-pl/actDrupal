@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "journal_id": "journal-install-001",
+  "operation_id": "operation-install-001",
+  "plan_id": "plan-install-001",
+  "plan_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "state": "succeeded",
+  "actor": {
+    "subject_id": "operator-alpha",
+    "authentication_method": "mfa-session",
+    "authentication_reference": "auth://session/alpha"
+  },
+  "protected_target_ids": ["resource://site/alpha"],
+  "locks": [
+    {
+      "lock_id": "lock-site-alpha",
+      "resource_id": "resource://site/alpha",
+      "owner_operation_id": "operation-install-001",
+      "acquired_at": "2026-09-13T10:02:00Z"
+    }
+  ],
+  "predecessor_generation": 7,
+  "target_generation": 8,
+  "intent_at": "2026-09-13T10:02:01Z",
+  "attempts": [
+    {
+      "attempt_id": "attempt-publish-001",
+      "effect_id": "effect-publish-generation",
+      "state": "succeeded",
+      "started_at": "2026-09-13T10:02:02Z",
+      "finished_at": "2026-09-13T10:02:12Z",
+      "deadline_at": "2026-09-13T10:04:00Z"
+    }
+  ],
+  "deadlines": {
+    "operation_deadline_at": "2026-09-13T10:04:00Z",
+    "lock_deadline_at": "2026-09-13T10:05:00Z",
+    "safety_deadline_at": "2026-09-13T10:06:00Z"
+  },
+  "handler": {
+    "handler_id": "deployment-install-handler",
+    "version": "1.0.0",
+    "release_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "expected_postconditions": [
+    {
+      "check_id": "check-site-ready",
+      "required": true,
+      "state": "satisfied",
+      "evidence_id": "evidence-site-ready-001"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "evidence_id": "evidence-site-ready-001",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111",
+      "source": "evidence://store/site-ready-001",
+      "trust": "authenticated"
+    }
+  ],
+  "error": null,
+  "reconciliation": {
+    "classification": "not-needed",
+    "required": false,
+    "reason_id": "operation-verified"
+  },
+  "cleanup_obligations": [
+    {
+      "cleanup_id": "cleanup-staging-001",
+      "resource_id": "resource://staging/install-001",
+      "state": "succeeded",
+      "deadline_at": null
+    }
+  ]
+}

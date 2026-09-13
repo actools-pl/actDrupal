@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.actools.invalid/contract-catalog-1.0.0.schema.json",
+  "title": "Actools contract catalog 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "catalog_id",
+    "profile",
+    "json_schema_dialect",
+    "canonicalization",
+    "action_vocabulary",
+    "diagnostic_formats",
+    "safe_next_actions",
+    "contracts"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "catalog_id": {"const": "actools-contract-catalog-1.0.0"},
+    "profile": {"const": "single-site-production"},
+    "json_schema_dialect": {"const": "https://json-schema.org/draft/2020-12/schema"},
+    "canonicalization": {"const": "RFC8785"},
+    "action_vocabulary": {
+      "type": "array",
+      "minItems": 22,
+      "maxItems": 22,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "host.initialize",
+          "host.prepare",
+          "deployment.install",
+          "configuration.publish",
+          "credentials.rotate",
+          "service.restart",
+          "caddy.reload",
+          "maintenance.transition",
+          "application.operator",
+          "storage.probe",
+          "notification.probe",
+          "backup.capture",
+          "backup.verify",
+          "backup.maintain",
+          "recovery.rehearse",
+          "recovery.restore",
+          "recovery.promote",
+          "deployment.update",
+          "deployment.rollback",
+          "management.update",
+          "diagnostics.probe",
+          "operation.reconcile"
+        ]
+      }
+    },
+    "diagnostic_formats": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {"enum": ["human", "json", "markdown", "html"]}
+    },
+    "safe_next_actions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {"$ref": "#/$defs/nextActionRegistration"}
+    },
+    "contracts": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {"$ref": "#/$defs/contractRegistration"}
+    }
+  },
+  "$defs": {
+    "nextActionRegistration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_id", "documentation_id", "source"],
+      "properties": {
+        "action_id": {
+          "enum": [
+            "collect.evidence",
+            "consult.runbook",
+            "inspect.operation",
+            "reconcile.operation",
+            "request.authority",
+            "resolve.coverage",
+            "retry.delivery",
+            "review.plan"
+          ]
+        },
+        "documentation_id": {
+          "type": "string",
+          "pattern": "^docs:[a-z][a-z0-9.-]{1,95}(?![\\s\\S])"
+        },
+        "source": {"const": "contract-catalog"}
+      }
+    },
+    "migrationEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_version", "to_version", "migration_id"],
+      "properties": {
+        "from_version": {"$ref": "common-1.0.0.schema.json#/$defs/schemaVersion"},
+        "to_version": {"$ref": "common-1.0.0.schema.json#/$defs/schemaVersion"},
+        "migration_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+      }
+    },
+    "contractRegistration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "owner",
+        "schema_version",
+        "schema_resource",
+        "policy_resource",
+        "reader_versions",
+        "writer_version",
+        "migration_edges",
+        "field_groups",
+        "artifact_boundary",
+        "mutation_authority"
+      ],
+      "properties": {
+        "family": {
+          "enum": [
+            "configuration",
+            "plan",
+            "operation-journal",
+            "requirement-graph",
+            "release-manifest",
+            "diagnostic-evidence",
+            "backup-set",
+            "command-result",
+            "contract-catalog"
+          ]
+        },
+        "owner": {
+          "enum": [
+            "operator-input",
+            "planner",
+            "protected-engine",
+            "reviewed-release-source",
+            "release-process",
+            "collector-evaluator",
+            "trusted-recovery-service",
+            "command-engine"
+          ]
+        },
+        "schema_version": {"const": "1.0.0"},
+        "schema_resource": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*-1\\.0\\.0\\.schema\\.json(?![\\s\\S])"
+        },
+        "policy_resource": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*-1\\.0\\.0\\.json(?![\\s\\S])"
+            }
+          ]
+        },
+        "reader_versions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/schemaVersion"}
+        },
+        "writer_version": {"const": "1.0.0"},
+        "migration_edges": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {"$ref": "#/$defs/migrationEdge"}
+        },
+        "field_groups": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{1,63}(?![\\s\\S])"
+          }
+        },
+        "artifact_boundary": {
+          "enum": ["operator-input", "generated-artifact", "protected-store", "release-resource", "result-envelope"]
+        },
+        "mutation_authority": {
+          "enum": ["none", "operator-explicit-output", "protected-writer", "release-process"]
+        }
+      }
+    }
+  }
+}

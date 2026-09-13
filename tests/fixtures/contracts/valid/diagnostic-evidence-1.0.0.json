@@ -1,0 +1,137 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "evidence-audit-001",
+  "run_id": "run-audit-001",
+  "target": {
+    "installation_id": "install-alpha",
+    "site_id": "site-alpha",
+    "environment_id": "production-alpha"
+  },
+  "host_id": "host-alpha",
+  "boot_id": "boot-alpha",
+  "collector": {
+    "collector_id": "host-collector",
+    "version": "1.0.0",
+    "identity": "collector-alpha",
+    "source_kind": "host-collector"
+  },
+  "context": {
+    "release_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "configuration_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+    "policy_id": "community-baseline",
+    "policy_version": "1.0.0",
+    "capability_ids": ["single-site-core"]
+  },
+  "captured_at": "2026-09-13T09:00:00Z",
+  "evaluated_at": "2026-09-13T09:01:00Z",
+  "valid_until": "2026-09-13T10:01:00Z",
+  "run_state": "partial",
+  "findings": [
+    {
+      "control_id": "control-firewall",
+      "check_version": "1.0.0",
+      "policy_id": "community-baseline",
+      "selected": true,
+      "required": true,
+      "applicable": true,
+      "prerequisite_ids": [],
+      "expected_id": "firewall-deny-by-default",
+      "observed_id": "firewall-unexpected-port",
+      "evidence_state": "valid",
+      "status": "FAIL",
+      "severity": "high",
+      "blocking": true,
+      "evidence_refs": [
+        {
+          "evidence_id": "observation-firewall-001",
+          "digest": "3333333333333333333333333333333333333333333333333333333333333333",
+          "source": "evidence://store/firewall-001",
+          "trust": "authenticated"
+        }
+      ],
+      "error_ids": [],
+      "remedy_id": "review-firewall-plan",
+      "exception_id": null,
+      "gate_impact": "blocks"
+    },
+    {
+      "control_id": "control-backup-freshness",
+      "check_version": "1.0.0",
+      "policy_id": "community-baseline",
+      "selected": true,
+      "required": true,
+      "applicable": true,
+      "prerequisite_ids": [],
+      "expected_id": "backup-within-policy",
+      "observed_id": null,
+      "evidence_state": "missing",
+      "status": "UNKNOWN",
+      "severity": "medium",
+      "blocking": false,
+      "evidence_refs": [],
+      "error_ids": ["backup-evidence-missing"],
+      "remedy_id": "collect-backup-evidence",
+      "exception_id": null,
+      "gate_impact": "does-not-block"
+    }
+  ],
+  "coverage": {
+    "selected": {
+      "numerator": 1,
+      "denominator": 2,
+      "gap_ids": ["control-backup-freshness"]
+    },
+    "full_required_policy": {
+      "numerator": 1,
+      "denominator": 2,
+      "gap_ids": ["control-backup-freshness"]
+    }
+  },
+  "gates": [
+    {
+      "policy_id": "community-baseline",
+      "gate_state": "blocked",
+      "blocking_finding_ids": ["control-firewall"],
+      "coverage_gap_ids": ["control-backup-freshness"]
+    }
+  ],
+  "attempts": [
+    {
+      "attempt_id": "attempt-firewall-001",
+      "control_id": "control-firewall",
+      "collector_id": "host-collector",
+      "started_at": "2026-09-13T09:00:00Z",
+      "finished_at": "2026-09-13T09:00:10Z",
+      "state": "completed",
+      "error_id": null
+    },
+    {
+      "attempt_id": "attempt-backup-001",
+      "control_id": "control-backup-freshness",
+      "collector_id": "host-collector",
+      "started_at": "2026-09-13T09:00:10Z",
+      "finished_at": "2026-09-13T09:00:11Z",
+      "state": "failed",
+      "error_id": "backup-evidence-missing"
+    }
+  ],
+  "artifact_refs": [],
+  "effects": [],
+  "cleanup": [],
+  "provenance": {
+    "source_kind": "canonical-evidence-store",
+    "source_reference": "evidence://store/run-audit-001",
+    "authentication": {
+      "state": "authenticated",
+      "reference": "auth://collector/host-alpha"
+    },
+    "integrity": {
+      "algorithm": "sha256",
+      "digest": "4444444444444444444444444444444444444444444444444444444444444444",
+      "verified": true
+    },
+    "context_matched": true,
+    "freshness_valid": true,
+    "presentation_only": false
+  }
+}

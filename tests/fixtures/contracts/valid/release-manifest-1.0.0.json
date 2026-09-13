@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0.0",
+  "release_id": "release-fixture-001",
+  "release_version": "1.0.0",
+  "source_commit": "0123456789abcdef0123456789abcdef01234567",
+  "artifacts": [
+    {
+      "artifact_id": "management-wheel",
+      "kind": "management",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111",
+      "source": "artifact://release/management-wheel"
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "jsonschema",
+      "version": "4.26.0",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222",
+      "license_id": "MIT"
+    }
+  ],
+  "license_references": ["license://release/notices"],
+  "sbom_references": ["sbom://release/cyclonedx-json"],
+  "platform_profiles": [
+    {
+      "profile": "single-site-production",
+      "os": "ubuntu-26.04",
+      "architecture": "amd64",
+      "runtime_backend": "docker-compose",
+      "advertised": false
+    }
+  ],
+  "contract_compatibility": [
+    {
+      "family": "configuration",
+      "reader_versions": ["1.0.0"],
+      "writer_version": "1.0.0"
+    },
+    {
+      "family": "plan",
+      "reader_versions": ["1.0.0"],
+      "writer_version": "1.0.0"
+    }
+  ],
+  "schema_update_edges": [],
+  "recovery_edges": [],
+  "upgrade_edges": [],
+  "requirement_graph_digest": "3333333333333333333333333333333333333333333333333333333333333333",
+  "configuration_template_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+  "security_floor": {
+    "policy_id": "community-security-floor",
+    "policy_version": "1.0.0",
+    "digest": "5555555555555555555555555555555555555555555555555555555555555555"
+  },
+  "verification": {
+    "signature_scheme": "openpgp",
+    "signature_reference": "signature://release/fixture-001",
+    "trust_root_reference": "trust://release/root-alpha",
+    "verified_at": "2026-09-13T09:00:00Z"
+  },
+  "qualification_receipts": []
+}

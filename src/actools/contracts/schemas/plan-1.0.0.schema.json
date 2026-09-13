@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.actools.invalid/plan-1.0.0.schema.json",
+  "title": "Actools declarative operation plan 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "canonicalization",
+    "plan_id",
+    "operation_id",
+    "action",
+    "request",
+    "actor_requirements",
+    "target",
+    "protected_resources",
+    "fingerprints",
+    "collected_at",
+    "expires_at",
+    "context_digests",
+    "required_capabilities",
+    "effects",
+    "disruption",
+    "preconditions",
+    "postconditions",
+    "recovery",
+    "irreversible_boundaries",
+    "review"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "canonicalization": {"const": "RFC8785"},
+    "plan_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+    "operation_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+    "action": {"$ref": "#/$defs/action"},
+    "request": {"$ref": "#/$defs/requestIdentity"},
+    "actor_requirements": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {"$ref": "#/$defs/actorRequirement"}
+    },
+    "target": {"$ref": "common-1.0.0.schema.json#/$defs/target"},
+    "protected_resources": {"$ref": "#/$defs/protectedResources"},
+    "fingerprints": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/fingerprint"}
+    },
+    "collected_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+    "expires_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+    "context_digests": {"$ref": "#/$defs/contextDigests"},
+    "required_capabilities": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+    },
+    "effects": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/effect"}
+    },
+    "disruption": {"$ref": "#/$defs/disruption"},
+    "preconditions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/check"}
+    },
+    "postconditions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/check"}
+    },
+    "recovery": {"$ref": "#/$defs/recovery"},
+    "irreversible_boundaries": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {"$ref": "#/$defs/irreversibleBoundary"}
+    },
+    "review": {"$ref": "#/$defs/review"}
+  },
+  "$defs": {
+    "action": {
+      "enum": [
+        "host.initialize",
+        "host.prepare",
+        "deployment.install",
+        "configuration.publish",
+        "credentials.rotate",
+        "service.restart",
+        "caddy.reload",
+        "maintenance.transition",
+        "application.operator",
+        "storage.probe",
+        "notification.probe",
+        "backup.capture",
+        "backup.verify",
+        "backup.maintain",
+        "recovery.rehearse",
+        "recovery.restore",
+        "recovery.promote",
+        "deployment.update",
+        "deployment.rollback",
+        "management.update",
+        "diagnostics.probe",
+        "operation.reconcile"
+      ]
+    },
+    "requestIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request_id", "schema_version", "action", "digest"],
+      "properties": {
+        "request_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "schema_version": {"$ref": "common-1.0.0.schema.json#/$defs/schemaVersion"},
+        "action": {"$ref": "#/$defs/action"},
+        "digest": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"}
+      }
+    },
+    "actorRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority_id", "authenticated_actor_required", "approval_required"],
+      "properties": {
+        "authority_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "authenticated_actor_required": {"type": "boolean"},
+        "approval_required": {"type": "boolean"}
+      }
+    },
+    "protectedResources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_ids", "destination_ids"],
+      "properties": {
+        "source_ids": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"}
+        },
+        "destination_ids": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"}
+        }
+      }
+    },
+    "fingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resource_id", "digest", "generation", "relevance"],
+      "properties": {
+        "resource_id": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+        "digest": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"},
+        "generation": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "relevance": {"enum": ["security", "target", "release", "configuration"]}
+      }
+    },
+    "contextDigests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["release", "configuration", "policy"],
+      "properties": {
+        "release": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"},
+        "configuration": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"},
+        "policy": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"}
+      }
+    },
+    "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effect_id", "effect_type", "resource_id", "description", "irreversible"],
+      "properties": {
+        "effect_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "effect_type": {"enum": ["create", "modify", "delete", "restart", "probe", "publish", "promote"]},
+        "resource_id": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+        "description": {"type": "string", "minLength": 1, "maxLength": 512},
+        "irreversible": {"type": "boolean"}
+      }
+    },
+    "disruption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "expected_seconds", "maximum_seconds", "description"],
+      "properties": {
+        "level": {"enum": ["none", "degraded", "interruption", "writer-quiesce"]},
+        "expected_seconds": {"type": "integer", "minimum": 0, "maximum": 86400},
+        "maximum_seconds": {"type": "integer", "minimum": 0, "maximum": 86400},
+        "description": {"type": "string", "minLength": 1, "maxLength": 512}
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_id", "description", "evidence_required"],
+      "properties": {
+        "check_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "description": {"type": "string", "minLength": 1, "maxLength": 512},
+        "evidence_required": {"type": "boolean"}
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checkpoint_required", "checkpoint_id", "rollback_strategy", "description"],
+      "properties": {
+        "checkpoint_required": {"type": "boolean"},
+        "checkpoint_id": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+          ]
+        },
+        "rollback_strategy": {"enum": ["none", "verified-predecessor", "qualified-recovery"]},
+        "description": {"type": "string", "minLength": 1, "maxLength": 512}
+      }
+    },
+    "irreversibleBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effect_id", "description", "acknowledgement_id"],
+      "properties": {
+        "effect_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "description": {"type": "string", "minLength": 1, "maxLength": 512},
+        "acknowledgement_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "review_identity", "reviewed_plan_digest", "reviewed_at", "expires_at"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "review_identity": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "reviewed_plan_digest": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"},
+        "reviewed_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+        "expires_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"}
+      }
+    }
+  }
+}

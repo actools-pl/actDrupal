@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0.0",
+  "command": {"name": "apply", "format": "json"},
+  "run_id": "run-apply-001",
+  "operation_id": "operation-install-001",
+  "target": {
+    "installation_id": "install-alpha",
+    "site_id": "site-alpha",
+    "environment_id": "production-alpha"
+  },
+  "run_state": "complete",
+  "outcome": "succeeded",
+  "started_at": "2026-09-13T10:02:00Z",
+  "finished_at": "2026-09-13T10:04:00Z",
+  "result": {
+    "kind": "operation",
+    "journal_reference": "journal://operations/install-001",
+    "durable_state": "succeeded",
+    "reconciliation_required": false
+  },
+  "operation_outcome": {
+    "durable_state": "succeeded",
+    "recorded": true,
+    "journal_reference": "journal://operations/install-001",
+    "reconciliation_required": false
+  },
+  "delivery": {
+    "status": "failed",
+    "stdout_document_count": 1,
+    "artifact_reference": null,
+    "error_id": "report-delivery-failed"
+  },
+  "errors": [
+    {
+      "error_id": "report-delivery-failed",
+      "source": "delivery",
+      "message_id": "destination-publication-failed",
+      "evidence_reference": null
+    }
+  ],
+  "evidence_refs": [
+    {
+      "evidence_id": "operation-postconditions-001",
+      "digest": "8888888888888888888888888888888888888888888888888888888888888888",
+      "source": "evidence://store/operation-001",
+      "trust": "authenticated"
+    }
+  ],
+  "next_actions": [
+    {
+      "action_id": "retry.delivery",
+      "source": "contract-catalog",
+      "documentation_id": "docs:result-delivery"
+    }
+  ],
+  "presentation": {
+    "format": "json",
+    "rendered_at": "2026-09-13T10:04:01Z",
+    "artifact_reference": null,
+    "admission_authority": "none",
+    "creates_evidence": false,
+    "collects_evidence": false
+  }
+}

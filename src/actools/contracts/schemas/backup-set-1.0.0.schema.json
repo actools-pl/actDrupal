@@ -1,0 +1,225 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.actools.invalid/backup-set-1.0.0.schema.json",
+  "title": "Actools recovery backup set 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "set_id",
+    "site_id",
+    "environment_id",
+    "protected_source_id",
+    "capture",
+    "release_reference",
+    "configuration_reference",
+    "constituents",
+    "repository",
+    "encryption",
+    "file_history_coverage",
+    "pitr_coverage",
+    "constituent_receipts",
+    "verification_results",
+    "commit",
+    "retention",
+    "restore_proof"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "set_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+    "site_id": {"$ref": "common-1.0.0.schema.json#/$defs/identifier"},
+    "environment_id": {"$ref": "common-1.0.0.schema.json#/$defs/identifier"},
+    "protected_source_id": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+    "capture": {"$ref": "#/$defs/capture"},
+    "release_reference": {"$ref": "common-1.0.0.schema.json#/$defs/releaseReference"},
+    "configuration_reference": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+    "constituents": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/constituent"}
+    },
+    "repository": {"$ref": "#/$defs/repository"},
+    "encryption": {"$ref": "#/$defs/encryption"},
+    "file_history_coverage": {"$ref": "#/$defs/historyCoverage"},
+    "pitr_coverage": {"$ref": "#/$defs/historyCoverage"},
+    "constituent_receipts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/constituentReceipt"}
+    },
+    "verification_results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/verificationResult"}
+    },
+    "commit": {"$ref": "#/$defs/commit"},
+    "retention": {"$ref": "#/$defs/retention"},
+    "restore_proof": {"$ref": "#/$defs/restoreProof"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"commit": {"properties": {"status": {"const": "committed"}}}}},
+      "then": {
+        "properties": {
+          "commit": {
+            "properties": {
+              "committed_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+              "checks": {
+                "properties": {
+                  "constituents_complete": {"const": true},
+                  "authenticated_manifest": {"const": true},
+                  "repository_verified": {"const": true},
+                  "snapshot_reference_verified": {"const": true}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["started_at", "completed_at", "boundary_id", "database_consistency", "files_consistency"],
+      "properties": {
+        "started_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+        "completed_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+        "boundary_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "database_consistency": {"enum": ["transactional-snapshot", "writer-quiesced"]},
+        "files_consistency": {"enum": ["writer-quiesced", "reconciled-staging"]}
+      }
+    },
+    "constituent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constituent_id", "kind", "required", "size_bytes", "digest"],
+      "properties": {
+        "constituent_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "kind": {"enum": ["database", "public-files", "private-files", "configuration", "release-identity", "application-secrets"]},
+        "required": {"type": "boolean"},
+        "size_bytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "digest": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"}
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository_id", "snapshot_id", "transport", "availability_verified_at"],
+      "properties": {
+        "repository_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "snapshot_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "transport": {"enum": ["restic-local", "restic-sftp", "restic-s3"]},
+        "availability_verified_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"}
+      }
+    },
+    "encryption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scheme", "key_id", "key_generation", "key_present_on_source"],
+      "properties": {
+        "scheme": {"const": "restic-repository"},
+        "key_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "key_generation": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "key_present_on_source": {"const": false}
+      }
+    },
+    "historyCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applicable", "status", "from", "until", "gap_ids"],
+      "properties": {
+        "applicable": {"type": "boolean"},
+        "status": {"enum": ["not-applicable", "complete", "incomplete", "unknown"]},
+        "from": {
+          "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"}]
+        },
+        "until": {
+          "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"}]
+        },
+        "gap_ids": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+        }
+      }
+    },
+    "constituentReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constituent_id", "receipt_id", "status", "captured_at", "digest_verified"],
+      "properties": {
+        "constituent_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "receipt_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "status": {"enum": ["complete", "failed", "missing"]},
+        "captured_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+        "digest_verified": {"type": "boolean"}
+      }
+    },
+    "verificationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_id", "status", "verified_at", "evidence_id"],
+      "properties": {
+        "check_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "status": {"enum": ["pass", "fail", "unknown"]},
+        "verified_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+        "evidence_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+      }
+    },
+    "commitChecks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constituents_complete", "authenticated_manifest", "repository_verified", "snapshot_reference_verified"],
+      "properties": {
+        "constituents_complete": {"type": "boolean"},
+        "authenticated_manifest": {"type": "boolean"},
+        "repository_verified": {"type": "boolean"},
+        "snapshot_reference_verified": {"type": "boolean"}
+      }
+    },
+    "commit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "committed_at", "manifest_digest", "checks"],
+      "properties": {
+        "status": {"enum": ["uncommitted", "committed", "failed"]},
+        "committed_at": {
+          "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"}]
+        },
+        "manifest_digest": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"},
+        "checks": {"$ref": "#/$defs/commitChecks"}
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classification", "protected_until", "maintenance_authority_id"],
+      "properties": {
+        "classification": {"enum": ["hourly", "daily", "weekly", "monthly", "legal-hold"]},
+        "protected_until": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+        "maintenance_authority_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+      }
+    },
+    "restoreProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "receipt_id", "verified_at", "historical_coverage_status"],
+      "properties": {
+        "status": {"enum": ["not-run", "pass", "fail", "stale"]},
+        "receipt_id": {
+          "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}]
+        },
+        "verified_at": {
+          "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"}]
+        },
+        "historical_coverage_status": {"enum": ["not-assessed", "complete", "incomplete", "unknown"]}
+      }
+    }
+  }
+}

@@ -24,6 +24,7 @@ _TIME_LIKE = re.compile('\\d{1,2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:[Zz]|[+-]\\d{2}:?\
 _SEXAGESIMAL = re.compile('[-+]?\\d+(?::[0-5]?\\d)+(?:\\.\\d+)?\\Z')
 _NUMERIC_EXTENSION = re.compile('(?:[-+]?0[xX][0-9a-fA-F_]+|[-+]?0[oO][0-7_]+|[-+]?0[bB][01_]+|[-+]?0[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?|[-+]?\\.[0-9]+(?:[eE][+-]?[0-9]+)?|[-+]?[0-9]+\\.(?:[eE][+-]?[0-9]+)?|\\+[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\\Z')
 _AMBIGUOUS_WORDS = {'yes', 'no', 'on', 'off', 'y', 'n'}
+_RESOURCE_NAME = re.compile(r'[a-z][a-z0-9-]*-1\.0\.0(?:\.schema)?\.json\Z')
 _FORMAT_CHECKER = FormatChecker()
 _FORMAT_CHECKER.checkers.clear()
 
@@ -139,9 +140,12 @@ def _resource_constant(_: str) -> Any:
     raise ConfigurationError('/', 'contract_resource_nonfinite_number')
 
 
-def _schema_resource(name: str) -> dict[str, Any]:
+def load_contract_resource(collection: str, name: str) -> Any:
+    """Load a bounded packaged JSON resource with the strict JSON parser."""
+    if collection not in {'schemas', 'policies'} or _RESOURCE_NAME.fullmatch(name) is None:
+        raise ConfigurationError('/', 'contract_resource_name_invalid')
     try:
-        raw = resources.files('actools.contracts').joinpath('schemas', name).read_bytes()
+        raw = resources.files('actools.contracts').joinpath(collection, name).read_bytes()
         text = raw.decode('utf-8', 'strict')
         value = json.loads(
             text,
@@ -154,6 +158,11 @@ def _schema_resource(name: str) -> dict[str, Any]:
         raise
     except Exception as exc:
         raise ConfigurationError('/', 'schema_resource_unavailable') from None
+    return value
+
+
+def _schema_resource(name: str) -> dict[str, Any]:
+    value = load_contract_resource('schemas', name)
     if not isinstance(value, dict):
         raise ConfigurationError('/', 'schema_resource_invalid')
     return value
@@ -193,6 +202,31 @@ def _expand_common_refs(value: Any, common: Mapping[str, Any]) -> Any:
     if isinstance(value, list):
         return [_expand_common_refs(v, common) for v in value]
     return value
+
+
+def expand_common_references(schema: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a detached schema with owned common references expanded."""
+    common = _schema_resource('common-1.0.0.schema.json')
+    expanded = _expand_common_refs(copy.deepcopy(dict(schema)), common)
+    if not isinstance(expanded, dict):
+        raise ConfigurationError('/', 'schema_resource_invalid')
+    return expanded
+
+
+def contract_schema_validator(
+    schema: Mapping[str, Any],
+) -> StrictDraft202012Validator:
+    """Create the shared strict Draft 2020-12 validator for a contract schema."""
+    expanded = expand_common_references(schema)
+    assert_schema_quality(expanded)
+    return StrictDraft202012Validator(expanded, format_checker=_FORMAT_CHECKER)
+
+
+def validate_contract_limits(
+    value: Any, *, max_aggregate_nodes: int = MAX_AGGREGATE_NODES
+) -> None:
+    """Apply the shared finite JSON model limits without mutating *value*."""
+    _validate_data_limits(value, max_aggregate_nodes=max_aggregate_nodes)
 
 def _configuration_schema() -> dict[str, Any]:
     common = _schema_resource('common-1.0.0.schema.json')
@@ -247,14 +281,16 @@ def _validate_unicode(text: str, path: str) -> None:
     if any((55296 <= ord(ch) <= 57343 for ch in text)):
         raise ConfigurationError(path, 'invalid_unicode_scalar')
 
-def _validate_data_limits(value: Any) -> None:
+def _validate_data_limits(
+    value: Any, *, max_aggregate_nodes: int = MAX_AGGREGATE_NODES
+) -> None:
     nodes = 0
 
     def walk(item: Any, depth: int, parts: list[object]) -> None:
         nonlocal nodes
         path = _owned_error_path(parts)
         nodes += 1
-        if nodes > MAX_AGGREGATE_NODES:
+        if nodes > max_aggregate_nodes:
             raise ConfigurationError('/', 'aggregate_node_limit')
         if item is None or isinstance(item, bool):
             return
@@ -279,7 +315,7 @@ def _validate_data_limits(value: Any) -> None:
                 if not isinstance(k, str):
                     raise ConfigurationError(path, 'non_string_mapping_key')
                 nodes += 1
-                if nodes > MAX_AGGREGATE_NODES:
+                if nodes > max_aggregate_nodes:
                     raise ConfigurationError('/', 'aggregate_node_limit')
                 _validate_unicode(k, path)
                 walk(v, nd, [*parts, k])
@@ -361,7 +397,9 @@ def _precheck_json_depth(text: str) -> None:
         elif ch in ']}':
             depth -= 1
 
-def parse_json_bytes(data: bytes) -> Any:
+def parse_json_bytes(
+    data: bytes, *, max_aggregate_nodes: int = MAX_AGGREGATE_NODES
+) -> Any:
     if len(data) > MAX_INPUT_BYTES:
         raise ConfigurationError('/', 'input_byte_limit')
     try:
@@ -381,7 +419,7 @@ def parse_json_bytes(data: bytes) -> Any:
         raise
     except (json.JSONDecodeError, ValueError, OverflowError) as exc:
         raise ConfigurationError('/', 'invalid_json') from None
-    _validate_data_limits(value)
+    _validate_data_limits(value, max_aggregate_nodes=max_aggregate_nodes)
     return value
 
 def _plain_yaml_scalar(text: str, path: str) -> Any:

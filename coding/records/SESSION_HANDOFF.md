@@ -1,55 +1,56 @@
 # Session handoff
 
-**Prepared:** 2026-09-11 after actual CP-001 merge `58cfa0d53abb002bd33cd185f56f62c9d830162c`, passing push-triggered Source CI and `CP001-IR-58cfa0d-post-merge-v1`. **Subject:** PM-R01 records/documentation closeout preparation; CP-002 remains planned/inactive.
+**Prepared:** 2026-09-13 after CP-002 merge `0810b890928e61afa8d94f2f8d64e1c867203b29`, successful push-triggered Source CI and `CP002-CPD12-POST-MERGE-0810b890-v1`. **Subject:** local-only CP-002 administrative closeout preparation. CP-003 remains planned/inactive.
 
 ## Authoritative repository point
 
 - Repository: `actools-pl/actDrupal`, ID `1361769952`.
-- Current `main` at PM-R01 final pre-write readback: `58cfa0d53abb002bd33cd185f56f62c9d830162c`, tree `4ca87f34300ba92e37f3e331d8e5ce1805fb41d0`, observed protected.
-- Accepted implementation branch `task/CP-001` remains retained at `2aafec4c15a8ea1f05a2a4d97268b8dd1e3fbbec`.
-- Remote `records/CP-001-closeout` is absent; no competing open CP-001 closeout PR was found.
-- No `task/CP-002` branch was observed; CP-002 remains `planned` with activation fields UNSET.
-- BOOT-000/BOOT-001 and their records closeout remain complete; do not replay BOOT operations.
+- Current `main`: `0810b890928e61afa8d94f2f8d64e1c867203b29`, tree `c8c1c4099b66cb1f623c993358f8693ff90227ff`, observed protected.
+- Accepted CP-002 branch `task/CP-002` remains retained at `f0d2d59e6edb0b7a1ccac8254bd0099788bb2ad1`.
+- Implementation PR #5 is merged; actual merge is `0810b890928e61afa8d94f2f8d64e1c867203b29`.
+- The records closeout branch is to be local `records/CP-002-closeout` from exact base `0810b890928e61afa8d94f2f8d64e1c867203b29`. No remote closeout branch/PR is authorized at this stage.
+- CP-003 remains `planned`; do not activate or edit its task card in this closeout.
 
-## CP-001 completed source/integration chronology
+## CP-002 completed chronology
 
-- Initial candidate `4036274201658873f8324f06224adc8f6985eeff` -> `CP001-IR-40362742-v1` CHANGES REQUESTED (F01-F06 + E01).
-- Correction candidate `1bdb6b09ddff16220dc5e414254788ba259e1d15` -> `CP001-IR-1bdb6b09-v1` verified F01-F06 source corrections; E01 remained open.
-- Ubuntu-26.04 alignment candidate `a40c61205a06b5ace32f67ae5c405ea7f89318d1` preceded resolver-lock candidate `2aafec4c15a8ea1f05a2a4d97268b8dd1e3fbbec` / tree `4ca87f34300ba92e37f3e331d8e5ce1805fb41d0`.
-- `CP001-IR-2aafec4-v1` found no new source defect and narrowed remaining local receipt/hosted gates. `CP001-IR-2aafec4-local-receipts-v1` accepted Local E01. `CP001-IR-2aafec4-E01H-v1` closed E01-H/overall E01 and recommended human acceptance.
-- MP Singh separately accepted exact candidate `2aafec4c15a8ea1f05a2a4d97268b8dd1e3fbbec`. PR #3 integrated it via normal protected merge `58cfa0d53abb002bd33cd185f56f62c9d830162c`; merge tree equals accepted candidate tree.
-- Push-triggered Source CI run `34571622780` / job `103174769272` passed on exact merge `58cfa0d53abb002bd33cd185f56f62c9d830162c`. `CP001-IR-58cfa0d-post-merge-v1` independently accepts the bounded source/integration result and identifies PM-R01 records closeout only.
+- Activation `CP002-ACT-32ecc89-v1` bound the source task to exact base `32ecc8978c968e39d72391cde1ee97d931834ef9`.
+- The first reviewed candidate `9529964d66f6a5937233b3e6175a531f77d2fd7d` received changes requested. Corrected candidate `5f3bfbec057c104dd7875608a5c9f7d4449bcb3c` closed six prior findings but exposed low-severity IR1-01.
+- Final candidate `f0d2d59e6edb0b7a1ccac8254bd0099788bb2ad1` / tree `c8c1c4099b66cb1f623c993358f8693ff90227ff` closed IR1-01 and IR-04 while preserving all other closures. `CP002-CPD12-IR1-01-FINAL-f0d2d59e-v1` accepted that exact source candidate.
+- Candidate publication produced draft PR #5. PR Source CI `34718115021` / `103618885540` passed on tested merge ref `2b347ccae46695e4f60dba25129a4294c006da76`.
+- Separate human merge authority was granted after publication/CI receipt review. PR #5 was marked ready and merged normally as `0810b890928e61afa8d94f2f8d64e1c867203b29` with parents `32ecc8978c968e39d72391cde1ee97d931834ef9` + `f0d2d59e6edb0b7a1ccac8254bd0099788bb2ad1` and unchanged accepted tree `c8c1c4099b66cb1f623c993358f8693ff90227ff`.
+- Push-triggered Source CI `34718507884` / `103619931310` passed on exact merge `0810b890928e61afa8d94f2f8d64e1c867203b29`. `CP002-CPD12-POST-MERGE-0810b890-v1` independently accepted post-merge integration.
+- FINAL-DOC-01 is closed by external erratum SHA-256 `59af572748ad112822c5a6680217d0d79f60b2426e946b2421f4518e5e183f0f`; historical incorrect narrative bytes remain preserved.
 
 ## Evidence anchors
 
-- Committed lock SHA-256: `6836c3ed72a3667e97b6901f9836f6c0957dd3512911b221986bc7c1b223e7e7`.
-- Local Phase-2 evidence archive: `d452112d68a46553cc8b25dd1c9c81deabe9f234907289622d26e801e66e2e52`; retained local wheel: `6afa0d7ea5b664bcd4edcd206cefbddb9558ccb704ea4fe777570002b4591abd`.
-- Local generator/source-integrity supplement: `630e558c316bdfba6d0e4f9f756136a55d6e09ddd14f8ebefc8217b6901a463f`.
-- PR-hosted E01-H run `34569300056` / job `103167778389`, tested PR merge subject `974712aaf6035c69d72a46821eb36ccb563cc517`, hosted wheel `85da105c2b8baec7983b568187fea377e1a4ef4aefe76af5498508c8ff32ce77`.
-- Actual implementation merge `58cfa0d53abb002bd33cd185f56f62c9d830162c`; post-merge push run `34571622780` / job `103174769272`, hosted wheel `a9c57aa62fdbbef84dc1cc6952316de4eb9f892c4ebe5011260061afe5d9c35b`.
-- E01-H independent review report SHA-256 `66af42084583733828c7dc1096a2665a73ccedc724c8778ae023e651ada2abb1`.
-- Post-merge independent review report SHA-256 `e50d7d370165c8459d3bb070e057864bfcde4036b8974c82615a5dc98ddef451`; coordinator post-merge packet SHA-256 `43a313ddc261af1dbb1f5f24499c487eb429374b7dc201ae2cab3dcb02d85b30`.
+- Final source review report: `CP002-CPD12-IR1-01-FINAL-f0d2d59e-v1` / SHA-256 `07a4c7cd7a71d25342faa1ec237b1194dd6776e8917fc0ef028e7c711bb9dc59`.
+- Final post-merge review report: `CP002-CPD12-POST-MERGE-0810b890-v1` / SHA-256 `86247ead16276ca263e35f7cc554c62469ba3141532d01ccd6bd5d162b746326`.
+- Final local Human-Git receipt: SHA-256 `2bc84e7d28cf241ba9ae77bfc0f1838f32a939faf6958bf12715a34a0f39e69d`; local wheel `6553d0fb5e2697ea43fb7bca46e113e367fe70d60649718ff0a6f5697c335109`.
+- Accepted lock: `1ac29d7c89c7c59afabe414429083786d9170c2b363ca61552dbbc0989a77fae`.
+- JCS set: `99ec46b9c79cd60a60315a78346a67d760ec59c0f528f053176feefb7957414b`.
+- PR hosted Source CI: run `34718115021`, job `103618885540`, wheel `e344522472c2bee026f8e7509a499219ccd9ed4cefadb095df6715c0ff45dbee`.
+- Post-merge hosted Source CI: run `34718507884`, job `103619931310`, wheel `66dc3cc6efbe94fce993bc10231218a136494fc0dabf5f209056ba9cce484804`.
 
-## PM-R01 current authority and scope
+## Closeout authority and exact scope
 
-MP Singh authorized a **local-only Human-Git** closeout candidate from exact base `58cfa0d53abb002bd33cd185f56f62c9d830162c` on local branch `records/CP-001-closeout`. Exactly nine existing paths may change:
+MP Singh authorized **local-only** construction of `records/CP-002-closeout` from exact base `0810b890928e61afa8d94f2f8d64e1c867203b29` / tree `c8c1c4099b66cb1f623c993358f8693ff90227ff`. Exactly nine existing paths may change:
 
-1. `coding/tasks/CP-001.md`
+1. `coding/tasks/CP-002.md`
 2. `coding/records/TASK_LEDGER.csv`
 3. `coding/records/PROJECT_STATE.md`
 4. `coding/records/SESSION_HANDOFF.md`
-5. `docs/adr/0001-package-and-source-ci.md`
+5. `docs/adr/0002-configuration-contract-and-canonicalization.md`
 6. `docs/development/source-ci.md`
 7. `coding/records/DOCUMENTATION_REGISTER.csv`
 8. `coding/records/REVIEW_LOG.csv`
 9. `coding/records/TEST_EVIDENCE_INDEX.csv`
 
-This authority does not permit remote closeout branch publication, PR creation, merge, branch deletion, repository/settings/ruleset changes, any implementation/source/workflow/lock/test/dependency change, release/deployment/server operations, or CP-002 activation. The closeout candidate commit/tree and evidence are returned externally for CPD-12 review before any remote write.
+No implementation source, schema, fixture, workflow, dependency input/lock, package metadata, test or CP-003 path may change. No push, PR, merge, branch deletion, workflow rerun, settings/protection/ruleset change, release/deployment/server operation or CP-003 activation is authorized. The closeout candidate must be independently reviewed before any remote write.
 
 ## Product and evidence limits
 
-CP-001 is a source/package/CI slice only. The accepted evidence does **not** establish Drupal installation, host hardening, privileged execution, firewall/SSH behavior, backup/restore, release signing, production admission or product-wide G-gate PASS. The disposable E01 host was only a source/dependency qualification environment. Historical failed findings and exploratory Python-3.13 observations remain history; do not relabel them as originally passing.
+CP-002 is a bounded data-contract/source-integration slice only. **Product/server/release qualification remains NOT_RUN / NOT CLAIMED.** Detailed branch-protection enforcement history is not certified: the independent post-merge reviewer observed `main` protected but could not read the detailed protection endpoint through the integration. Do not infer production readiness or a product-wide G-gate PASS from CP-002 source/CI success.
 
 ## Next action
 
-Review the exact PM-R01 records-only candidate through CPD-12. If accepted, obtain a **separate** human authorization for any publication/PR/integration of `records/CP-001-closeout`, inspect automatically triggered CI under the normal workflow, and record the actual closeout integration identity outside self-referential candidate bytes. Only after that closeout is integrated should a separate CP-002 activation decision populate its real base/branch/allowlist/test inputs.
+Construct and verify the exact nine-path local closeout candidate, return its full commit/tree identity and diff, then submit that candidate to CPD-12 focused records review. If accepted, obtain separate human authority for any publication/PR/integration of `records/CP-002-closeout`. Only after closeout integration and a separate activation decision may CP-003 begin.

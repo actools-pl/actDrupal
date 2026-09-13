@@ -1,6 +1,6 @@
 # ADR-0002 — Strict configuration contract and RFC 8785 canonicalization
 
-Status: **implemented in a local CP-002 candidate; CPD-12 correction/review, acceptance, merge and publication remain pending.**
+Status: **implemented and integrated by PR #5 as merge `0810b890928e61afa8d94f2f8d64e1c867203b29`; exact candidate `f0d2d59e6edb0b7a1ccac8254bd0099788bb2ad1` and post-merge integration were independently accepted. CP-002 administrative records closeout remains a separate reviewed follow-up.**
 
 ## Context
 
@@ -62,6 +62,6 @@ The distribution still has version `0.1.0.dev0` and the CP-001 CLI remains untou
 
 Configuration validity is not installation/production readiness. No host, Drupal, backup, restore, release-signing or product-wide gate is established by this ADR.
 
-A CP-002 review candidate is complete only when `requirements/ci.lock` has been resolver-generated under the accepted Ubuntu Server 26.04.1 x86_64 / CPython 3.14.7 / pip 26.2.1 / pip-tools 7.6.1 contract and the corresponding local receipts are retained. The historical r2 coding delivery intentionally omitted the lock; Human-Git subsequently generated it for the reviewed local candidate. Any correction that changes the generated header must regenerate the lock in that exact environment rather than hand-editing it, while preserving the frozen dependency/hash body. Hosted Source CI remains unexecuted until publication is separately authorized.
+The accepted CP-002 candidate contains the resolver-generated `requirements/ci.lock` produced under the accepted Ubuntu Server 26.04.1 x86_64 / CPython 3.14.7 / pip 26.2.1 / pip-tools 7.6.1 contract, with retained Human-Git evidence. The historical r2 coding delivery intentionally omitted the lock; later Human-Git generated and qualified it rather than hand-editing resolver hashes. The accepted lock SHA-256 is `1ac29d7c89c7c59afabe414429083786d9170c2b363ca61552dbbc0989a77fae`. Any future dependency/header change must repeat the documented exact-environment generation and qualification discipline.
 
-The vector receipt values are present for deterministic source testing, but the packet-required Human-Git independent digest recomputation is still an evidence obligation before final review.
+Human-Git independently recomputed the JCS vector digests before final source review; the accepted set SHA-256 is `99ec46b9c79cd60a60315a78346a67d760ec59c0f528f053176feefb7957414b`. PR Source CI `34718115021` / `103618885540` passed for the accepted PR subject, and push Source CI `34718507884` / `103619931310` passed on actual merge `0810b890928e61afa8d94f2f8d64e1c867203b29`. `CP002-CPD12-POST-MERGE-0810b890-v1` independently accepted that integration. These results remain source/integration evidence only and do not establish installation, host, release or production qualification.

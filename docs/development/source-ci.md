@@ -38,7 +38,7 @@ pip-compile --no-config --index-url=https://pypi.org/simple --no-emit-index-url 
 
 Set `CUSTOM_COMPILE_COMMAND` to that exact one-line command before invoking the same pinned pip-compile option set. This makes pip-tools' generated header record the truthful normalized command rather than reconstructing an incomplete or false command line. The canonical checker rejects any generated header that does not contain that exact command or that claims `--no-index`.
 
-Run generation only from the disposable accepted environment after confirming `python --version`, `python -m pip --version`, and `pip-compile --version`; do not substitute a different platform or tool version merely to obtain a lock. The historical r2 coding delivery intentionally omitted the lock because its sandbox was not the accepted environment. A review candidate must contain the exact-environment generated lock and its local generation/install/test receipts; a source tree that already contains such a lock must not be described as if lock generation were still pending. Hosted Source CI remains unexecuted until publication is separately authorized.
+Run generation only from the disposable accepted environment after confirming `python --version`, `python -m pip --version`, and `pip-compile --version`; do not substitute a different platform or tool version merely to obtain a lock. The historical r2 coding delivery intentionally omitted the lock because its sandbox was not the accepted environment. A review candidate must contain the exact-environment generated lock and its local generation/install/test receipts; a source tree that already contains such a lock must not be described as if lock generation were still pending. For the accepted CP-002 candidate, hosted Source CI was later executed under separate publication/merge authority: PR run `34718115021` / job `103618885540` passed for the accepted PR subject, and push run `34718507884` / job `103619931310` passed on actual merge `0810b890928e61afa8d94f2f8d64e1c867203b29`. These historical results do not eliminate the requirement to rerun applicable checks for later source changes.
 
 ## Canonical checker assertions
 
@@ -76,7 +76,18 @@ A command printed in documentation is not evidence that it ran. Record actual en
 
 ## JCS provenance receipt
 
-The six compact vector pairs are pinned to `cyberphone/json-canonicalization@19d51d7fe467d4706a3ff08adf8a748f29fc21e0`. `tests/fixtures/jcs/cyberphone/PROVENANCE.md` records source paths, coder-stage local-byte SHA-256 values and Apache-2.0 notice. The Human-Git operator must independently recompute/confirm every file digest and the set digest before the final candidate is independently reviewed.
+The six compact vector pairs are pinned to `cyberphone/json-canonicalization@19d51d7fe467d4706a3ff08adf8a748f29fc21e0`. `tests/fixtures/jcs/cyberphone/PROVENANCE.md` records source paths, coder-stage local-byte SHA-256 values and Apache-2.0 notice. Human-Git independently recomputed/confirmed every vector digest before the final CP-002 candidate review. The accepted set SHA-256 is `99ec46b9c79cd60a60315a78346a67d760ec59c0f528f053176feefb7957414b`. Any future vector/provenance change requires fresh recomputation and review.
+
+## Accepted CP-002 evidence chronology
+
+- Final local candidate: `f0d2d59e6edb0b7a1ccac8254bd0099788bb2ad1` / tree `c8c1c4099b66cb1f623c993358f8693ff90227ff`; local final Human-Git receipt SHA-256 `2bc84e7d28cf241ba9ae77bfc0f1838f32a939faf6958bf12715a34a0f39e69d`; canonical local wheel `6553d0fb5e2697ea43fb7bca46e113e367fe70d60649718ff0a6f5697c335109`.
+- Final source review: `CP002-CPD12-IR1-01-FINAL-f0d2d59e-v1` accepted that exact candidate.
+- PR Source CI: run `34718115021` / job `103618885540`, accepted PR merge ref `2b347ccae46695e4f60dba25129a4294c006da76`, `SOURCE-CI: PASS`, wheel `e344522472c2bee026f8e7509a499219ccd9ed4cefadb095df6715c0ff45dbee`.
+- Actual normal merge: `0810b890928e61afa8d94f2f8d64e1c867203b29`, parents `32ecc8978c968e39d72391cde1ee97d931834ef9` + `f0d2d59e6edb0b7a1ccac8254bd0099788bb2ad1`, tree `c8c1c4099b66cb1f623c993358f8693ff90227ff`.
+- Post-merge push Source CI: run `34718507884` / job `103619931310`, `SOURCE-CI: PASS`, wheel `66dc3cc6efbe94fce993bc10231218a136494fc0dabf5f209056ba9cce484804`.
+- Final integration review: `CP002-CPD12-POST-MERGE-0810b890-v1` — accepted post-merge integration.
+
+These are historical evidence anchors for CP-002. They do not authorize or pre-qualify later tasks.
 
 ## Evidence boundary
 

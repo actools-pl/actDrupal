@@ -17,11 +17,11 @@
 ## Accepted CP-003 evidence chain
 
 - Source review `CP003-CPD12-IR1R2-dddc691a-v1`; report SHA-256 `9238eb7cd2b441a2d82d076ef238411493c248fb9984e83b25b50902642f0b39`; F01–F11 and D01 closed.
-- Canonical attempt `CP003-E01-SOURCE-dddc691a-v1`; PASS; evidence ZIP SHA-256 `181f5755db3abbfe1734e7feddae6f9de09787597b664e1ec4236814005b5413`; retained wheel SHA-256 `a8c5a083f02d1482f424820ea903def28791991ae56bcf91a1272bba0560ea56`.
+- Canonical attempt `CP003-E01-SOURCE-dddc691a-v1`; PASS; evidence ZIP SHA-256 `181f5755db3abbfe1734e7feddae6f9de09787597b664e1ec4236814005b5413`; retained wheel SHA-256 `a8c5a083ae88b29f2d3cf469648ba7c426106eccd06c390017c4e172f162a190`.
 - Publication attempt `CP003-PUB01-PUSH-dddc691a-v1`; PASS; evidence ZIP SHA-256 `44b41efdf243aa9c09e7ca1bdd2b0379fc62044bc4aafe3a0300b2c7428cf7f9`.
 - PR Source CI run/job `34841884042` / `103968536609`, attempt 1, SUCCESS; hosted wheel SHA-256 `20873db8cb8a99b31c7694e96e75e475a688b34f0b43c59e7928bdc55ff26c4a`.
 - Actual normal merge `0193528b54d803399b0e79e621c21fa9759a2a53`; exact ordered parents and candidate-identical tree above.
-- Post-merge Source CI run/job `34843725735` / `103974490061`, attempt 1, SUCCESS; hosted wheel SHA-256 `8ff88859d4531756f8f31eab0b90f9ff935d1247dbe94d75f6e188f7fd2f90ad`.
+- Post-merge Source CI run/job `34843725735` / `103974490061`, attempt 1, SUCCESS; hosted wheel SHA-256 `8ff88859ecfa5906799ba6f2ba53ebf6e50428c811d835f04481de9f2066bb10`.
 - Final review `CP003-CPD12-POST-MERGE-0193528b-v1`; **ACCEPTED POST-MERGE INTEGRATION**; report SHA-256 `44ac2820a645c51d3d45708359c64fab13644e5533e7dbed4b3c8496c4b260be`.
 
 Product/server/release qualification remains **NOT_RUN / NOT CLAIMED**. The evidence-specific wheel hashes do not establish release reproducibility.

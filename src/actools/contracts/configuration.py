@@ -1,6 +1,6 @@
 """Strict configuration parsing, validation, defaults and origin resolution."""
 from __future__ import annotations
-import copy, ipaddress, json, math, re
+import copy, datetime, ipaddress, json, math, re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from importlib import resources
@@ -15,6 +15,9 @@ CONTRACT_VERSION = '1.0.0'
 SUPPORTED_PROFILE = 'single-site-production'
 DEFAULT_SET = 'configuration-defaults-1.0.0'
 MAX_INPUT_BYTES = 1048576
+MAX_CONTRACT_RESOURCE_NODES = 4_096
+MAX_GRAPH_RESOURCE_NODES = 32_768
+MAX_SCHEMA_EXPANSION_NODES = 32_768
 _JSON_NUMBER = re.compile('-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\\Z')
 _DOMAIN_LABEL = re.compile('[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\Z')
 _FS_AUTHORITY = re.compile('fs-auth:[a-z][a-z0-9-]{1,62}\\Z')
@@ -23,7 +26,14 @@ _DATE_LIKE = re.compile('(?:\\d{4}-\\d{2}-\\d{2}(?:[Tt ].*)?|[0-9]{4}-[0-9]{1,2}
 _TIME_LIKE = re.compile('\\d{1,2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:[Zz]|[+-]\\d{2}:?\\d{2})?\\Z')
 _SEXAGESIMAL = re.compile('[-+]?\\d+(?::[0-5]?\\d)+(?:\\.\\d+)?\\Z')
 _NUMERIC_EXTENSION = re.compile('(?:[-+]?0[xX][0-9a-fA-F_]+|[-+]?0[oO][0-7_]+|[-+]?0[bB][01_]+|[-+]?0[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?|[-+]?\\.[0-9]+(?:[eE][+-]?[0-9]+)?|[-+]?[0-9]+\\.(?:[eE][+-]?[0-9]+)?|\\+[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\\Z')
+_UTC_TIMESTAMP = re.compile(
+    r'(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-'
+    r'(?P<day>0[1-9]|[12][0-9]|3[01])T'
+    r'(?P<hour>[01][0-9]|2[0-3]):(?P<minute>[0-5][0-9]):'
+    r'(?P<second>[0-5][0-9])(?:\.(?P<fraction>[0-9]{1,9}))?Z\Z'
+)
 _AMBIGUOUS_WORDS = {'yes', 'no', 'on', 'off', 'y', 'n'}
+_RESOURCE_NAME = re.compile(r'[a-z][a-z0-9-]*-1\.0\.0(?:\.schema)?\.json\Z')
 _FORMAT_CHECKER = FormatChecker()
 _FORMAT_CHECKER.checkers.clear()
 
@@ -91,10 +101,44 @@ def _is_fs_authority(value: object) -> bool:
 
 def _is_secret_reference(value: object) -> bool:
     return isinstance(value, str) and _SECRET_REFERENCE.fullmatch(value) is not None
+
+
+def utc_timestamp_nanoseconds(value: object) -> int:
+    """Return the exact UTC instant as an integer nanosecond ordering key."""
+    if not isinstance(value, str):
+        raise ConfigurationError('/', 'invalid_utc_timestamp')
+    match = _UTC_TIMESTAMP.fullmatch(value)
+    if match is None:
+        raise ConfigurationError('/', 'invalid_utc_timestamp')
+    parts = {name: int(match.group(name)) for name in (
+        'year', 'month', 'day', 'hour', 'minute', 'second'
+    )}
+    try:
+        day = datetime.date(parts['year'], parts['month'], parts['day'])
+    except ValueError:
+        raise ConfigurationError('/', 'invalid_utc_timestamp') from None
+    fraction = match.group('fraction') or ''
+    nanoseconds = int(fraction.ljust(9, '0')) if fraction else 0
+    whole_seconds = (
+        ((day.toordinal() * 24 + parts['hour']) * 60 + parts['minute']) * 60
+        + parts['second']
+    )
+    return whole_seconds * 1_000_000_000 + nanoseconds
+
+
+def _is_utc_timestamp(value: object) -> bool:
+    try:
+        utc_timestamp_nanoseconds(value)
+    except ConfigurationError:
+        return False
+    return True
+
+
 _FORMAT_CHECKER.checks('actools-domain')(_is_domain)
 _FORMAT_CHECKER.checks('actools-endpoint')(_is_endpoint)
 _FORMAT_CHECKER.checks('actools-filesystem-authority-id')(_is_fs_authority)
 _FORMAT_CHECKER.checks('actools-secret-reference')(_is_secret_reference)
+_FORMAT_CHECKER.checks('actools-utc-timestamp')(_is_utc_timestamp)
 
 def _pointer_escape(part: str) -> str:
     return part.replace('~', '~0').replace('/', '~1')
@@ -126,34 +170,29 @@ def _owned_error_path(parts: list[object]) -> str:
     pointer = _json_pointer(parts)
     return pointer or '/'
 
-def _resource_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    result: dict[str, Any] = {}
-    for key, value in pairs:
-        if key in result:
-            raise ConfigurationError('/', 'contract_resource_duplicate_key')
-        result[key] = value
-    return result
-
-
-def _resource_constant(_: str) -> Any:
-    raise ConfigurationError('/', 'contract_resource_nonfinite_number')
+def load_contract_resource(collection: str, name: str) -> Any:
+    """Load a bounded packaged JSON resource with the strict JSON parser."""
+    if collection not in {'schemas', 'policies'} or _RESOURCE_NAME.fullmatch(name) is None:
+        raise ConfigurationError('/', 'contract_resource_name_invalid')
+    try:
+        resource = resources.files('actools.contracts').joinpath(collection, name)
+        with resource.open('rb') as stream:
+            raw = stream.read(MAX_INPUT_BYTES + 1)
+    except Exception:
+        raise ConfigurationError('/', 'schema_resource_unavailable') from None
+    return parse_json_bytes(
+        raw,
+        max_aggregate_nodes=(
+            MAX_GRAPH_RESOURCE_NODES
+            if collection == 'policies'
+            and name == 'requirement-graph-1.0.0.json'
+            else MAX_CONTRACT_RESOURCE_NODES
+        ),
+    )
 
 
 def _schema_resource(name: str) -> dict[str, Any]:
-    try:
-        raw = resources.files('actools.contracts').joinpath('schemas', name).read_bytes()
-        text = raw.decode('utf-8', 'strict')
-        value = json.loads(
-            text,
-            object_pairs_hook=_resource_pairs,
-            parse_int=_json_integer,
-            parse_float=_json_float,
-            parse_constant=_resource_constant,
-        )
-    except ConfigurationError:
-        raise
-    except Exception as exc:
-        raise ConfigurationError('/', 'schema_resource_unavailable') from None
+    value = load_contract_resource('schemas', name)
     if not isinstance(value, dict):
         raise ConfigurationError('/', 'schema_resource_invalid')
     return value
@@ -179,7 +218,18 @@ def assert_schema_quality(schema: Mapping[str, Any] | None=None) -> None:
     if _known_formats(target) - set(_FORMAT_CHECKER.checkers):
         raise ConfigurationError('/', 'schema_unregistered_format')
 
-def _expand_common_refs(value: Any, common: Mapping[str, Any]) -> Any:
+def _expand_common_refs(
+    value: Any,
+    common: Mapping[str, Any],
+    *,
+    reference_stack: tuple[str, ...] = (),
+    budget: list[int] | None = None,
+) -> Any:
+    if budget is None:
+        budget = [MAX_SCHEMA_EXPANSION_NODES]
+    budget[0] -= 1
+    if budget[0] < 0:
+        raise ConfigurationError('/', 'schema_reference_expansion_limit')
     if isinstance(value, dict):
         if set(value) == {'$ref'} and isinstance(value['$ref'], str):
             prefix = 'common-1.0.0.schema.json#/$defs/'
@@ -188,11 +238,59 @@ def _expand_common_refs(value: Any, common: Mapping[str, Any]) -> Any:
                 definition = common.get('$defs', {}).get(name)
                 if definition is None:
                     raise ConfigurationError('/', 'schema_reference_invalid')
-                return _expand_common_refs(copy.deepcopy(definition), common)
-        return {k: _expand_common_refs(v, common) for k, v in value.items()}
+                if name in reference_stack:
+                    raise ConfigurationError('/', 'schema_reference_cycle')
+                return _expand_common_refs(
+                    copy.deepcopy(definition),
+                    common,
+                    reference_stack=(*reference_stack, name),
+                    budget=budget,
+                )
+        return {
+            k: _expand_common_refs(
+                v,
+                common,
+                reference_stack=reference_stack,
+                budget=budget,
+            )
+            for k, v in value.items()
+        }
     if isinstance(value, list):
-        return [_expand_common_refs(v, common) for v in value]
+        return [
+            _expand_common_refs(
+                v,
+                common,
+                reference_stack=reference_stack,
+                budget=budget,
+            )
+            for v in value
+        ]
     return value
+
+
+def expand_common_references(schema: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a detached schema with owned common references expanded."""
+    common = _schema_resource('common-1.0.0.schema.json')
+    expanded = _expand_common_refs(copy.deepcopy(dict(schema)), common)
+    if not isinstance(expanded, dict):
+        raise ConfigurationError('/', 'schema_resource_invalid')
+    return expanded
+
+
+def contract_schema_validator(
+    schema: Mapping[str, Any],
+) -> StrictDraft202012Validator:
+    """Create the shared strict Draft 2020-12 validator for a contract schema."""
+    expanded = expand_common_references(schema)
+    assert_schema_quality(expanded)
+    return StrictDraft202012Validator(expanded, format_checker=_FORMAT_CHECKER)
+
+
+def validate_contract_limits(
+    value: Any, *, max_aggregate_nodes: int = MAX_AGGREGATE_NODES
+) -> None:
+    """Apply the shared finite JSON model limits without mutating *value*."""
+    _validate_data_limits(value, max_aggregate_nodes=max_aggregate_nodes)
 
 def _configuration_schema() -> dict[str, Any]:
     common = _schema_resource('common-1.0.0.schema.json')
@@ -247,14 +345,16 @@ def _validate_unicode(text: str, path: str) -> None:
     if any((55296 <= ord(ch) <= 57343 for ch in text)):
         raise ConfigurationError(path, 'invalid_unicode_scalar')
 
-def _validate_data_limits(value: Any) -> None:
+def _validate_data_limits(
+    value: Any, *, max_aggregate_nodes: int = MAX_AGGREGATE_NODES
+) -> None:
     nodes = 0
 
     def walk(item: Any, depth: int, parts: list[object]) -> None:
         nonlocal nodes
         path = _owned_error_path(parts)
         nodes += 1
-        if nodes > MAX_AGGREGATE_NODES:
+        if nodes > max_aggregate_nodes:
             raise ConfigurationError('/', 'aggregate_node_limit')
         if item is None or isinstance(item, bool):
             return
@@ -279,7 +379,7 @@ def _validate_data_limits(value: Any) -> None:
                 if not isinstance(k, str):
                     raise ConfigurationError(path, 'non_string_mapping_key')
                 nodes += 1
-                if nodes > MAX_AGGREGATE_NODES:
+                if nodes > max_aggregate_nodes:
                     raise ConfigurationError('/', 'aggregate_node_limit')
                 _validate_unicode(k, path)
                 walk(v, nd, [*parts, k])
@@ -361,7 +461,9 @@ def _precheck_json_depth(text: str) -> None:
         elif ch in ']}':
             depth -= 1
 
-def parse_json_bytes(data: bytes) -> Any:
+def parse_json_bytes(
+    data: bytes, *, max_aggregate_nodes: int = MAX_AGGREGATE_NODES
+) -> Any:
     if len(data) > MAX_INPUT_BYTES:
         raise ConfigurationError('/', 'input_byte_limit')
     try:
@@ -381,7 +483,7 @@ def parse_json_bytes(data: bytes) -> Any:
         raise
     except (json.JSONDecodeError, ValueError, OverflowError) as exc:
         raise ConfigurationError('/', 'invalid_json') from None
-    _validate_data_limits(value)
+    _validate_data_limits(value, max_aggregate_nodes=max_aggregate_nodes)
     return value
 
 def _plain_yaml_scalar(text: str, path: str) -> Any:

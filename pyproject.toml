@@ -36,7 +36,7 @@ where = ["src"]
 include = ["actools", "actools.*"]
 
 [tool.setuptools.package-data]
-"actools.contracts" = ["schemas/*.json"]
+"actools.contracts" = ["policies/*.json", "schemas/*.json"]
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"

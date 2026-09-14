@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.actools.invalid/command-result-1.0.0.schema.json",
+  "title": "Actools command result envelope 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "command",
+    "run_id",
+    "operation_id",
+    "target",
+    "run_state",
+    "outcome",
+    "started_at",
+    "finished_at",
+    "result",
+    "operation_outcome",
+    "delivery",
+    "errors",
+    "evidence_refs",
+    "next_actions",
+    "presentation"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "command": {"$ref": "#/$defs/command"},
+    "run_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+    "operation_id": {
+      "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}]
+    },
+    "target": {"$ref": "common-1.0.0.schema.json#/$defs/target"},
+    "run_state": {"enum": ["complete", "partial", "error"]},
+    "outcome": {"enum": ["succeeded", "failed", "blocked", "interrupted", "not-evaluated"]},
+    "started_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+    "finished_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+    "result": {
+      "oneOf": [
+        {"$ref": "#/$defs/versionResult"},
+        {"$ref": "#/$defs/artifactResult"},
+        {"$ref": "#/$defs/diagnosticResult"},
+        {"$ref": "#/$defs/operationResult"},
+        {"$ref": "#/$defs/inventoryResult"}
+      ]
+    },
+    "operation_outcome": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/operationOutcome"}]
+    },
+    "delivery": {"$ref": "#/$defs/delivery"},
+    "errors": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/error"}
+    },
+    "evidence_refs": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {"$ref": "common-1.0.0.schema.json#/$defs/evidenceReference"}
+    },
+    "next_actions": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {"$ref": "#/$defs/nextAction"}
+    },
+    "presentation": {"$ref": "#/$defs/presentation"}
+  },
+  "$defs": {
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "format"],
+      "properties": {
+        "name": {
+          "enum": [
+            "version",
+            "init",
+            "config.validate",
+            "capabilities.list",
+            "host.check",
+            "service.status",
+            "service.logs",
+            "service.stats",
+            "tls.check",
+            "plan",
+            "apply",
+            "operation.show",
+            "operation.list",
+            "doctor",
+            "audit",
+            "backup.list",
+            "evidence.export",
+            "evidence.verify"
+          ]
+        },
+        "format": {"enum": ["human", "json", "markdown", "html"]}
+      }
+    },
+    "versionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "version", "source_commit"],
+      "properties": {
+        "kind": {"const": "version"},
+        "version": {"$ref": "common-1.0.0.schema.json#/$defs/schemaVersion"},
+        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}(?![\\s\\S])"}
+      }
+    },
+    "artifactResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "contract_family", "contract_version", "contract_reference", "digest"],
+      "properties": {
+        "kind": {"const": "artifact"},
+        "contract_family": {"enum": ["configuration", "plan", "diagnostic-evidence", "backup-set"]},
+        "contract_version": {"$ref": "common-1.0.0.schema.json#/$defs/schemaVersion"},
+        "contract_reference": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+        "digest": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"}
+      }
+    },
+    "diagnosticResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "evidence_reference", "policy_id", "gate_state", "selected_coverage_complete", "full_required_coverage_complete"],
+      "properties": {
+        "kind": {"const": "diagnostic"},
+        "evidence_reference": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+        "policy_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "gate_state": {"enum": ["pass", "blocked", "not_evaluated"]},
+        "selected_coverage_complete": {"type": "boolean"},
+        "full_required_coverage_complete": {"type": "boolean"}
+      }
+    },
+    "operationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "journal_reference", "durable_state", "reconciliation_required"],
+      "properties": {
+        "kind": {"const": "operation"},
+        "journal_reference": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+        "durable_state": {"enum": ["pending", "running", "succeeded", "failed", "blocked", "interrupted"]},
+        "reconciliation_required": {"type": "boolean"}
+      }
+    },
+    "inventoryResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "catalog_reference", "item_count"],
+      "properties": {
+        "kind": {"const": "inventory"},
+        "catalog_reference": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+        "item_count": {"type": "integer", "minimum": 0, "maximum": 4096}
+      }
+    },
+    "operationOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["durable_state", "recorded", "journal_reference", "reconciliation_required"],
+      "properties": {
+        "durable_state": {"enum": ["pending", "running", "succeeded", "failed", "blocked", "interrupted"]},
+        "recorded": {"type": "boolean"},
+        "journal_reference": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+        "reconciliation_required": {"type": "boolean"}
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "stdout_document_count", "artifact_reference", "error_id"],
+      "properties": {
+        "status": {"enum": ["delivered", "failed", "not-requested"]},
+        "stdout_document_count": {"const": 1},
+        "artifact_reference": {
+          "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/artifactReference"}]
+        },
+        "error_id": {
+          "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}]
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["error_id", "source", "message_id", "evidence_reference"],
+      "properties": {
+        "error_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "source": {"enum": ["invocation", "context", "engine", "operation", "report", "delivery"]},
+        "message_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "evidence_reference": {
+          "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"}]
+        }
+      }
+    },
+    "nextAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_id", "source", "documentation_id"],
+      "properties": {
+        "action_id": {"enum": ["collect.evidence", "consult.runbook", "inspect.operation", "reconcile.operation", "request.authority", "resolve.coverage", "retry.delivery", "review.plan"]},
+        "source": {"const": "contract-catalog"},
+        "documentation_id": {"type": "string", "pattern": "^docs:[a-z][a-z0-9.-]{1,95}(?![\\s\\S])"}
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "rendered_at", "artifact_reference", "admission_authority", "creates_evidence", "collects_evidence"],
+      "properties": {
+        "format": {"enum": ["human", "json", "markdown", "html"]},
+        "rendered_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+        "artifact_reference": {
+          "oneOf": [{"type": "null"}, {"$ref": "common-1.0.0.schema.json#/$defs/artifactReference"}]
+        },
+        "admission_authority": {"const": "none"},
+        "creates_evidence": {"const": false},
+        "collects_evidence": {"const": false}
+      }
+    }
+  }
+}

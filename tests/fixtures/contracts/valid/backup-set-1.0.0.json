@@ -1,0 +1,106 @@
+{
+  "schema_version": "1.0.0",
+  "set_id": "backup-set-001",
+  "site_id": "site-alpha",
+  "environment_id": "production-alpha",
+  "protected_source_id": "resource://site/alpha",
+  "capture": {
+    "started_at": "2026-09-13T08:00:00Z",
+    "completed_at": "2026-09-13T08:05:00Z",
+    "boundary_id": "capture-boundary-001",
+    "database_consistency": "transactional-snapshot",
+    "files_consistency": "reconciled-staging"
+  },
+  "release_reference": "release://actools/1.0.0",
+  "configuration_reference": "configuration://site/alpha",
+  "constituents": [
+    {"constituent_id": "database-primary", "kind": "database", "required": true, "size_bytes": 1024, "digest": "1111111111111111111111111111111111111111111111111111111111111111"},
+    {"constituent_id": "public-files", "kind": "public-files", "required": true, "size_bytes": 2048, "digest": "2222222222222222222222222222222222222222222222222222222222222222"},
+    {"constituent_id": "private-files", "kind": "private-files", "required": true, "size_bytes": 1024, "digest": "3333333333333333333333333333333333333333333333333333333333333333"},
+    {"constituent_id": "configuration", "kind": "configuration", "required": true, "size_bytes": 512, "digest": "4444444444444444444444444444444444444444444444444444444444444444"},
+    {"constituent_id": "release-identity", "kind": "release-identity", "required": true, "size_bytes": 256, "digest": "5555555555555555555555555555555555555555555555555555555555555555"},
+    {"constituent_id": "application-secrets", "kind": "application-secrets", "required": true, "size_bytes": 256, "digest": "6666666666666666666666666666666666666666666666666666666666666666"}
+  ],
+  "repository": {
+    "repository_id": "recovery-repository-alpha",
+    "snapshot_id": "restic-snapshot-001",
+    "transport": "restic-rest",
+    "availability_verified_at": "2026-09-13T08:06:00Z"
+  },
+  "encryption": {
+    "scheme": "restic-repository",
+    "key_id": "recovery-key-alpha",
+    "key_generation": 3,
+    "key_present_on_source": false
+  },
+  "file_history_coverage": {
+    "applicable": false,
+    "status": "not-applicable",
+    "from": null,
+    "until": null,
+    "gap_ids": []
+  },
+  "pitr_coverage": {
+    "applicable": false,
+    "status": "not-applicable",
+    "from": null,
+    "until": null,
+    "gap_ids": []
+  },
+  "constituent_receipts": [
+    {"constituent_id": "database-primary", "receipt_id": "receipt-database", "status": "complete", "captured_at": "2026-09-13T08:05:00Z", "digest_verified": true},
+    {"constituent_id": "public-files", "receipt_id": "receipt-public", "status": "complete", "captured_at": "2026-09-13T08:05:00Z", "digest_verified": true},
+    {"constituent_id": "private-files", "receipt_id": "receipt-private", "status": "complete", "captured_at": "2026-09-13T08:05:00Z", "digest_verified": true},
+    {"constituent_id": "configuration", "receipt_id": "receipt-configuration", "status": "complete", "captured_at": "2026-09-13T08:05:00Z", "digest_verified": true},
+    {"constituent_id": "release-identity", "receipt_id": "receipt-release", "status": "complete", "captured_at": "2026-09-13T08:05:00Z", "digest_verified": true},
+    {"constituent_id": "application-secrets", "receipt_id": "receipt-secrets", "status": "complete", "captured_at": "2026-09-13T08:05:00Z", "digest_verified": true}
+  ],
+  "verification_results": [
+    {
+      "check_id": "check-constituents-complete",
+      "status": "pass",
+      "verified_at": "2026-09-13T08:06:00Z",
+      "evidence_id": "evidence-constituents-complete"
+    },
+    {
+      "check_id": "check-authenticated-manifest",
+      "status": "pass",
+      "verified_at": "2026-09-13T08:06:00Z",
+      "evidence_id": "evidence-authenticated-manifest"
+    },
+    {
+      "check_id": "check-repository-availability",
+      "status": "pass",
+      "verified_at": "2026-09-13T08:06:00Z",
+      "evidence_id": "evidence-repository-availability"
+    },
+    {
+      "check_id": "check-repository-snapshot",
+      "status": "pass",
+      "verified_at": "2026-09-13T08:06:00Z",
+      "evidence_id": "evidence-repository-snapshot"
+    }
+  ],
+  "commit": {
+    "status": "committed",
+    "committed_at": "2026-09-13T08:07:00Z",
+    "manifest_digest": "7777777777777777777777777777777777777777777777777777777777777777",
+    "checks": {
+      "constituents_complete": true,
+      "authenticated_manifest": true,
+      "repository_verified": true,
+      "snapshot_reference_verified": true
+    }
+  },
+  "retention": {
+    "classification": "hourly",
+    "protected_until": "2026-09-14T08:07:00Z",
+    "maintenance_authority_id": "backup-destructive-maintenance"
+  },
+  "restore_proof": {
+    "status": "not-run",
+    "receipt_id": null,
+    "verified_at": null,
+    "historical_coverage_status": "not-assessed"
+  }
+}

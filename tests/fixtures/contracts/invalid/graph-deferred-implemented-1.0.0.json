@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "graph_id": "fixture-deferred-implemented-1.0.0",
+  "profile": "single-site-production",
+  "architecture_version": "1.5.1",
+  "architecture_sha256": "b131f36e316593f93aa9ec41e86c1b918a7b32dec87300188e4fdf0d487dde87",
+  "expected_counts": {
+    "feature": 75,
+    "work_package": 25,
+    "gate": 22,
+    "ux_requirement": 18,
+    "security_refinement": 8,
+    "security_case": 15,
+    "total": 163
+  },
+  "nodes": [
+    {
+      "id": "F24",
+      "kind": "feature",
+      "title": "S3-compatible storage",
+      "parent_feature_ids": [
+        "F24"
+      ],
+      "parent_mapping_status": "resolved",
+      "source_refs": [
+        "architecture-v1.5.1#3",
+        "architecture-v1.5.1#18.3"
+      ],
+      "decision_status": "deferred",
+      "decision_detail": "Deferred by user: production S3-compatible storage adapter",
+      "implementation_status": "implemented",
+      "advertised_support": false,
+      "runtime_evidence": {
+        "status": "not-evaluated",
+        "evidence_ids": []
+      },
+      "applicability": {
+        "predicate": "future-decision",
+        "capability_id": null,
+        "mapping_status": "resolved"
+      },
+      "owner_ids": [
+        "WP13"
+      ],
+      "dependency_ids": [],
+      "dependency_mapping_status": "unresolved",
+      "refines_ids": [],
+      "supersedes_ids": [],
+      "relationship_mapping_status": "unresolved",
+      "test_mapping": {
+        "status": "unresolved",
+        "acceptance_ids": []
+      },
+      "contract_mapping": {
+        "status": "unresolved",
+        "authority_ids": [],
+        "secret_ids": [],
+        "endpoint_ids": [],
+        "resource_ids": [],
+        "action_ids": [],
+        "handler_ids": [],
+        "schema_ids": [],
+        "schema_update_ids": [],
+        "probe_ids": [],
+        "recovery_constituent_ids": [],
+        "disable_behavior": "The owning implementation task must define and test safe disable behavior before support is advertised.",
+        "rollback_behavior": "The owning implementation task must define and test bounded rollback or qualified recovery before support is advertised.",
+        "support_profiles": []
+      },
+      "evidence_refs": []
+    }
+  ]
+}

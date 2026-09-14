@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Canonical CP-002 source checks used locally and by GitHub Actions."""
+"""Canonical CP-003 source checks used locally and by GitHub Actions."""
 
 from __future__ import annotations
 
@@ -64,22 +64,30 @@ DIST_INFO = "actools_drupal-0.1.0.dev0.dist-info"
 CONTRACT_FILES = {
     "actools/contracts/__init__.py",
     "actools/contracts/canonical.py",
+    "actools/contracts/catalog.py",
     "actools/contracts/configuration.py",
     "actools/contracts/errors.py",
+    "actools/contracts/evaluation.py",
+    "actools/contracts/graph.py",
+    "actools/contracts/models.py",
+    "actools/contracts/policies/contract-catalog-1.0.0.json",
+    "actools/contracts/policies/requirement-graph-1.0.0.json",
+    "actools/contracts/schemas/backup-set-1.0.0.schema.json",
+    "actools/contracts/schemas/command-result-1.0.0.schema.json",
     "actools/contracts/schemas/common-1.0.0.schema.json",
     "actools/contracts/schemas/configuration-1.0.0.schema.json",
     "actools/contracts/schemas/configuration-defaults-1.0.0.json",
+    "actools/contracts/schemas/contract-catalog-1.0.0.schema.json",
+    "actools/contracts/schemas/diagnostic-evidence-1.0.0.schema.json",
+    "actools/contracts/schemas/operation-journal-1.0.0.schema.json",
+    "actools/contracts/schemas/plan-1.0.0.schema.json",
+    "actools/contracts/schemas/release-manifest-1.0.0.schema.json",
+    "actools/contracts/schemas/requirement-graph-1.0.0.schema.json",
 }
 EXPECTED_WHEEL_MEMBERS = {
     "actools/__init__.py",
     "actools/cli.py",
-    "actools/contracts/__init__.py",
-    "actools/contracts/canonical.py",
-    "actools/contracts/configuration.py",
-    "actools/contracts/errors.py",
-    "actools/contracts/schemas/common-1.0.0.schema.json",
-    "actools/contracts/schemas/configuration-1.0.0.schema.json",
-    "actools/contracts/schemas/configuration-defaults-1.0.0.json",
+    *CONTRACT_FILES,
     f"{DIST_INFO}/licenses/LICENSE",
     f"{DIST_INFO}/licenses/NOTICE.md",
     f"{DIST_INFO}/METADATA",
@@ -593,6 +601,7 @@ import importlib.metadata
 import json
 import pathlib
 import sys
+from actools.contracts.catalog import load_contract_catalog, load_packaged_contract
 from actools.contracts.configuration import load_configuration
 from importlib import resources
 m = importlib.metadata.metadata('actools-drupal')
@@ -608,6 +617,10 @@ for distribution, module_name in (('PyYAML', 'yaml'), ('jsonschema', 'jsonschema
 raw = b'{"schema_version":"1.0.0","profile":"single-site-production","installation":{"id":"install-main"},"site":{"id":"site-main","domain":"example.test"},"environment":{"id":"production-main"},"host":{"management_endpoint":"admin.example.test:22","filesystem_authority_id":"fs-auth:main"},"secrets":{"database_credentials":"secret://database/application"},"references":{"policy":"policy://single-site-production/1.0.0","release":"release://actools/0.1.0-dev"}}'
 resolved = load_configuration(raw, syntax='json')
 schema = resources.files('actools.contracts').joinpath('schemas', 'configuration-1.0.0.schema.json').read_bytes()
+catalog_policy = resources.files('actools.contracts').joinpath('policies', 'contract-catalog-1.0.0.json').read_bytes()
+graph_policy = resources.files('actools.contracts').joinpath('policies', 'requirement-graph-1.0.0.json').read_bytes()
+catalog = load_contract_catalog()
+graph = load_packaged_contract('requirement-graph')
 print(json.dumps({
     'prefix': str(pathlib.Path(sys.prefix).resolve()),
     'module': str(pathlib.Path(actools.__file__).resolve()),
@@ -615,6 +628,10 @@ print(json.dumps({
     'requires': sorted(m.get_all('Requires-Dist') or []),
     'runtime': runtime,
     'dialect': json.loads(schema.decode('utf-8'))['$schema'],
+    'catalog_policy_version': json.loads(catalog_policy.decode('utf-8'))['schema_version'],
+    'graph_policy_version': json.loads(graph_policy.decode('utf-8'))['schema_version'],
+    'catalog_families': len(catalog.contracts),
+    'graph_nodes': len(graph.nodes),
     'cache_mode': resolved.configuration['drupal']['cache']['mode'],
     'origin': resolved.origins['/drupal/cache/mode']['origin'],
 }, sort_keys=True))
@@ -649,10 +666,14 @@ print(json.dumps({
                 )
     if (
         info["dialect"] != "https://json-schema.org/draft/2020-12/schema"
+        or info["catalog_policy_version"] != "1.0.0"
+        or info["graph_policy_version"] != "1.0.0"
+        or info["catalog_families"] != 9
+        or info["graph_nodes"] != 163
         or info["cache_mode"] != "database"
         or info["origin"] != "release_default"
     ):
-        raise CheckFailure("installed CP-002 contract/schema/default probe failed")
+        raise CheckFailure("installed contract/schema/policy probe failed")
     if hashlib.sha256(wheel.read_bytes()).hexdigest() != wheel_sha256:
         raise CheckFailure("wheel changed between inventory and installed-launcher checks")
 
@@ -706,7 +727,7 @@ def main() -> int:
         verify_workflow()
         run([sys.executable, "-m", "pytest", "-q"])
         verify_negative_fixtures()
-        with tempfile.TemporaryDirectory(prefix="actools-cp002-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="actools-cp003-") as tmp:
             work = Path(tmp)
             out = work / "dist"
             out.mkdir()

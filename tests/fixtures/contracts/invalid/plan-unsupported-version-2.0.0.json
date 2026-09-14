@@ -1,0 +1,94 @@
+{
+  "schema_version": "2.0.0",
+  "canonicalization": "RFC8785",
+  "plan_id": "plan-install-001",
+  "operation_id": "operation-install-001",
+  "action": "deployment.install",
+  "request": {
+    "request_id": "request-install-001",
+    "schema_version": "1.0.0",
+    "action": "deployment.install",
+    "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "actor_requirements": [
+    {
+      "authority_id": "deployment-mutation",
+      "authenticated_actor_required": true,
+      "approval_required": true
+    }
+  ],
+  "target": {
+    "installation_id": "install-alpha",
+    "site_id": "site-alpha",
+    "environment_id": "production-alpha"
+  },
+  "protected_resources": {
+    "source_ids": [
+      "resource://release/one"
+    ],
+    "destination_ids": [
+      "resource://site/alpha"
+    ]
+  },
+  "fingerprints": [
+    {
+      "resource_id": "resource://site/alpha",
+      "digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "generation": 7,
+      "relevance": "target"
+    }
+  ],
+  "collected_at": "2026-09-13T10:00:00Z",
+  "expires_at": "2026-09-13T10:15:00Z",
+  "context_digests": {
+    "release": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "configuration": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "policy": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  },
+  "required_capabilities": [
+    "single-site-core"
+  ],
+  "effects": [
+    {
+      "effect_id": "effect-publish-generation",
+      "effect_type": "publish",
+      "resource_id": "resource://site/alpha",
+      "description": "Publish the reviewed immutable deployment generation.",
+      "irreversible": false
+    }
+  ],
+  "disruption": {
+    "level": "interruption",
+    "expected_seconds": 30,
+    "maximum_seconds": 120,
+    "description": "The site may be unavailable while readiness is verified."
+  },
+  "preconditions": [
+    {
+      "check_id": "check-target-empty",
+      "description": "The protected fresh-install target is empty and owned.",
+      "evidence_required": true
+    }
+  ],
+  "postconditions": [
+    {
+      "check_id": "check-site-ready",
+      "description": "The installed generation reports its verified readiness.",
+      "evidence_required": true
+    }
+  ],
+  "recovery": {
+    "checkpoint_required": false,
+    "checkpoint_id": null,
+    "rollback_strategy": "verified-predecessor",
+    "description": "Retain the verified predecessor until the postconditions pass."
+  },
+  "irreversible_boundaries": [],
+  "review": {
+    "required": true,
+    "review_identity": "review-install-alpha",
+    "reviewed_plan_digest": "084f394fa49d56f215c38d3e86a08b7969c723bc32e9af4dc7f25dd23285b1e8",
+    "reviewed_at": "2026-09-13T10:01:00Z",
+    "expires_at": "2026-09-13T10:15:00Z"
+  }
+}

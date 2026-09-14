@@ -1,6 +1,17 @@
 """Versioned data-only contracts for the actDrupal fresh-install rewrite."""
 
 from .canonical import canonical_json_bytes
+from .catalog import (
+    canonical_contract_bytes,
+    canonical_contract_digest,
+    canonical_plan_payload_bytes,
+    canonical_plan_payload_digest,
+    load_contract_catalog,
+    load_packaged_contract,
+    parse_contract_bytes,
+    registration_for,
+    validate_contract_document,
+)
 from .configuration import (
     CONTRACT_VERSION,
     DEFAULT_SET,
@@ -14,7 +25,34 @@ from .configuration import (
     parse_yaml_bytes,
     resolve_configuration,
 )
-from .errors import CanonicalizationError, ConfigurationError
+from .errors import (
+    CanonicalizationError,
+    ConfigurationError,
+    ContractError,
+    ContractVersionError,
+    EvaluationError,
+    RequirementGraphError,
+)
+from .evaluation import (
+    AdmissionVerification,
+    ControlEvaluationInput,
+    DiagnosticEvaluation,
+    evaluate_diagnostics,
+    evidence_is_admissible,
+)
+from .graph import EXPECTED_COUNTS, EXPECTED_NODE_IDS, validate_requirement_graph
+from .models import (
+    BackupSet,
+    BackupTransport,
+    CommandResult,
+    ContractCatalog,
+    DiagnosticEvidence,
+    OperationJournal,
+    Plan,
+    ReleaseManifest,
+    RequirementGraph,
+    to_primitive,
+)
 
 __all__ = [
     "CONTRACT_VERSION",
@@ -24,11 +62,42 @@ __all__ = [
     "ResolvedConfiguration",
     "ConfigurationError",
     "CanonicalizationError",
+    "ContractError",
+    "ContractVersionError",
+    "RequirementGraphError",
+    "EvaluationError",
+    "ContractCatalog",
+    "RequirementGraph",
+    "Plan",
+    "OperationJournal",
+    "ReleaseManifest",
+    "DiagnosticEvidence",
+    "BackupSet",
+    "BackupTransport",
+    "CommandResult",
+    "ControlEvaluationInput",
+    "DiagnosticEvaluation",
+    "AdmissionVerification",
+    "EXPECTED_COUNTS",
+    "EXPECTED_NODE_IDS",
     "canonical_json_bytes",
+    "canonical_contract_bytes",
+    "canonical_contract_digest",
+    "canonical_plan_payload_bytes",
+    "canonical_plan_payload_digest",
     "assert_schema_quality",
     "parse_json_bytes",
     "parse_yaml_bytes",
     "parse_configuration_bytes",
     "resolve_configuration",
     "load_configuration",
+    "load_contract_catalog",
+    "load_packaged_contract",
+    "registration_for",
+    "parse_contract_bytes",
+    "validate_contract_document",
+    "validate_requirement_graph",
+    "evaluate_diagnostics",
+    "evidence_is_admissible",
+    "to_primitive",
 ]

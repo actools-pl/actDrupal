@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.actools.invalid/diagnostic-evidence-1.0.0.schema.json",
+  "title": "Actools evaluated diagnostic evidence 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evidence_id",
+    "run_id",
+    "target",
+    "host_id",
+    "boot_id",
+    "collector",
+    "context",
+    "captured_at",
+    "evaluated_at",
+    "valid_until",
+    "run_state",
+    "findings",
+    "coverage",
+    "gates",
+    "attempts",
+    "artifact_refs",
+    "effects",
+    "cleanup",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "evidence_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+    "run_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+    "target": {"$ref": "common-1.0.0.schema.json#/$defs/target"},
+    "host_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+    "boot_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+    "collector": {"$ref": "#/$defs/collector"},
+    "context": {"$ref": "#/$defs/context"},
+    "captured_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+    "evaluated_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+    "valid_until": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+    "run_state": {"enum": ["complete", "partial", "error"]},
+    "findings": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2048,
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "coverage": {"$ref": "#/$defs/coveragePair"},
+    "gates": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/gate"}
+    },
+    "attempts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2048,
+      "items": {"$ref": "#/$defs/attempt"}
+    },
+    "artifact_refs": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {"$ref": "common-1.0.0.schema.json#/$defs/artifactReference"}
+    },
+    "effects": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/effectRecord"}
+    },
+    "cleanup": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/cleanupRecord"}
+    },
+    "provenance": {"$ref": "#/$defs/provenance"}
+  },
+  "$defs": {
+    "collector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["collector_id", "version", "identity", "source_kind"],
+      "properties": {
+        "collector_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "version": {"$ref": "common-1.0.0.schema.json#/$defs/schemaVersion"},
+        "identity": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "source_kind": {"enum": ["host-collector", "application-collector", "probe-runner", "equivalent-receipt", "canonical-evidence-store"]}
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["release_digest", "configuration_digest", "policy_id", "policy_version", "capability_ids"],
+      "properties": {
+        "release_digest": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"},
+        "configuration_digest": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"},
+        "policy_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "policy_version": {"$ref": "common-1.0.0.schema.json#/$defs/schemaVersion"},
+        "capability_ids": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "control_id",
+        "check_version",
+        "policy_id",
+        "selected",
+        "required",
+        "applicable",
+        "prerequisite_ids",
+        "expected_id",
+        "observed_id",
+        "observed_status",
+        "evidence_state",
+        "status",
+        "severity",
+        "blocking",
+        "evidence_refs",
+        "error_ids",
+        "remedy_id",
+        "exception_id",
+        "gate_impact"
+      ],
+      "properties": {
+        "control_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "check_version": {"$ref": "common-1.0.0.schema.json#/$defs/schemaVersion"},
+        "policy_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "selected": {"type": "boolean"},
+        "required": {"type": "boolean"},
+        "applicable": {"type": "boolean"},
+        "prerequisite_ids": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+        },
+        "expected_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "observed_id": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+          ]
+        },
+        "observed_status": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["PASS", "FAIL", "WARN"]}
+          ]
+        },
+        "evidence_state": {"enum": ["valid", "missing", "stale", "inaccessible", "malformed", "unsupported", "inconclusive", "skipped", "not-applicable-proven"]},
+        "status": {"enum": ["PASS", "FAIL", "WARN", "UNKNOWN", "SKIPPED", "NOT_APPLICABLE"]},
+        "severity": {"enum": ["critical", "high", "medium", "low", "info", "none"]},
+        "blocking": {"type": "boolean"},
+        "evidence_refs": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/evidenceReference"}
+        },
+        "error_ids": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+        },
+        "remedy_id": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+          ]
+        },
+        "exception_id": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+          ]
+        },
+        "gate_impact": {"enum": ["blocks", "does-not-block", "not-evaluated"]}
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numerator", "denominator", "gap_ids"],
+      "properties": {
+        "numerator": {"type": "integer", "minimum": 0, "maximum": 2048},
+        "denominator": {"type": "integer", "minimum": 0, "maximum": 2048},
+        "gap_ids": {
+          "type": "array",
+          "maxItems": 2048,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+        }
+      }
+    },
+    "coveragePair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selected", "full_required_policy"],
+      "properties": {
+        "selected": {"$ref": "#/$defs/coverage"},
+        "full_required_policy": {"$ref": "#/$defs/coverage"}
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_id", "gate_state", "blocking_finding_ids", "coverage_gap_ids"],
+      "properties": {
+        "policy_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "gate_state": {"enum": ["pass", "blocked", "not_evaluated"]},
+        "blocking_finding_ids": {
+          "type": "array",
+          "maxItems": 2048,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+        },
+        "coverage_gap_ids": {
+          "type": "array",
+          "maxItems": 2048,
+          "uniqueItems": true,
+          "items": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+        }
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_id", "control_id", "collector_id", "started_at", "finished_at", "state", "error_id"],
+      "properties": {
+        "attempt_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "control_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "collector_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "started_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+        "finished_at": {"$ref": "common-1.0.0.schema.json#/$defs/utcTimestamp"},
+        "state": {"enum": ["completed", "failed", "skipped", "timed-out"]},
+        "error_id": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+          ]
+        }
+      }
+    },
+    "effectRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effect_id", "effect_class", "target_id", "authorized", "outcome"],
+      "properties": {
+        "effect_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "effect_class": {"enum": ["none", "read", "probe", "bookkeeping", "artifact-write"]},
+        "target_id": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+        "authorized": {"type": "boolean"},
+        "outcome": {"enum": ["not-attempted", "succeeded", "failed", "uncertain"]}
+      }
+    },
+    "cleanupRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effect_id", "required", "outcome", "evidence_id"],
+      "properties": {
+        "effect_id": {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"},
+        "required": {"type": "boolean"},
+        "outcome": {"enum": ["not-required", "succeeded", "failed", "unknown"]},
+        "evidence_id": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "common-1.0.0.schema.json#/$defs/contractIdentifier"}
+          ]
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_kind", "source_reference", "authentication", "integrity", "context_matched", "freshness_valid", "presentation_only"],
+      "properties": {
+        "source_kind": {"enum": ["host-collector", "application-collector", "probe-runner", "equivalent-receipt", "canonical-evidence-store"]},
+        "source_reference": {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"},
+        "authentication": {"$ref": "#/$defs/authentication"},
+        "integrity": {"$ref": "#/$defs/integrity"},
+        "context_matched": {"type": "boolean"},
+        "freshness_valid": {"type": "boolean"},
+        "presentation_only": {"const": false}
+      }
+    },
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reference"],
+      "properties": {
+        "state": {"enum": ["authenticated", "self-asserted", "unverified"]},
+        "reference": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "common-1.0.0.schema.json#/$defs/ownedReference"}
+          ]
+        }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "digest", "verified"],
+      "properties": {
+        "algorithm": {"const": "sha256"},
+        "digest": {"$ref": "common-1.0.0.schema.json#/$defs/sha256"},
+        "verified": {"type": "boolean"}
+      }
+    }
+  }
+}
